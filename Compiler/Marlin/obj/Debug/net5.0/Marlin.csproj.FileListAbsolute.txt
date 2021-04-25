@@ -30,3 +30,10 @@ D:\MarlinLang\Compiler\Marlin\obj\Debug\net5.0\Marlin.dll
 D:\MarlinLang\Compiler\Marlin\obj\Debug\net5.0\ref\Marlin.dll
 D:\MarlinLang\Compiler\Marlin\obj\Debug\net5.0\Marlin.pdb
 D:\MarlinLang\Compiler\Marlin\obj\Debug\net5.0\Marlin.genruntimeconfig.cache
+D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\Microsoft.Win32.SystemEvents.dll
+D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\System.Drawing.Common.dll
+D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\runtimes\win\lib\netcoreapp3.0\Microsoft.Win32.SystemEvents.dll
+D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\runtimes\unix\lib\netcoreapp3.0\System.Drawing.Common.dll
+D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\runtimes\win\lib\netcoreapp3.0\System.Drawing.Common.dll
+D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\TreeGenerator.dll
+D:\MarlinLang\Compiler\Marlin\obj\Debug\net5.0\Marlin.csproj.CopyComplete

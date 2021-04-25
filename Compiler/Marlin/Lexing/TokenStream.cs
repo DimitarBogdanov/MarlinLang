@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Marlin.Parser.Lexing
+namespace Marlin.Lexing
 {
     public class TokenStream
     {

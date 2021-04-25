@@ -1,4 +1,4 @@
-﻿namespace Marlin.Parser.Lexing
+﻿namespace Marlin.Lexing
 {
     public class Token
     {

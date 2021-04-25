@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Marlin.Parser.Lexing
+namespace Marlin.Lexing
 {
     public class Tokenizer
     {
