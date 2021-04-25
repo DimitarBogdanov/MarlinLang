@@ -44,6 +44,11 @@ namespace Marlin.Lexing
             }
         }
 
+        public List<Token> GetTokens()
+        {
+            return tokens;
+        }
+
         public Token GetCurrentToken()
         {
             return tokens[pos];

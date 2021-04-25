@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Marlin.Parsing
 {
@@ -8,7 +9,7 @@ namespace Marlin.Parsing
         BINARY_OPERATOR,
         FUNCTION,
         FUNCTION_CALL,
-        CLASS_DEFINITION,
+        CLASS_TEMPLATE,
         TYPE_REFERENCE,
         VARIABLE_ASSIGNMENT,
         VARIABLE_REFERENCE,
@@ -25,13 +26,19 @@ namespace Marlin.Parsing
 
         public Node(string id = "")
         {
+            if (id == "")
+                id = Guid.NewGuid().ToString();
+
             Id = id;
         }
 
         public void AddChild(Node child)
         {
-            child.Parent = this;
-            Children.Add(child);
+            if (child != null)
+            {
+                child.Parent = this;
+                Children.Add(child);
+            }
         }
 
         public override string ToString()
@@ -44,7 +51,7 @@ namespace Marlin.Parsing
     {
         public string Value { get; private set; }
 
-        public BinaryOperatorNode(string id, string value) : base(id)
+        public BinaryOperatorNode(string value)
         {
             Value = value;
 
@@ -57,12 +64,29 @@ namespace Marlin.Parsing
         }
     }
 
+    public class ClassTemplateNode : Node
+    {
+        public string Name { get; private set; }
+
+        public ClassTemplateNode(string name)
+        {
+            Name = name;
+
+            Type = NodeType.CLASS_TEMPLATE;
+        }
+
+        public override string ToString()
+        {
+            return "ClassTemplate<" + Name + ">";
+        }
+    }
+
     #region Numbers
     public class NumberIntegerNode : Node
     {
         public int Value { get; private set; }
 
-        public NumberIntegerNode(string id, int value) : base(id)
+        public NumberIntegerNode(int value)
         {
             Value = value;
 
@@ -79,7 +103,7 @@ namespace Marlin.Parsing
     {
         public double Value { get; private set; }
 
-        public NumberDoubleNode(string id, double value) : base(id)
+        public NumberDoubleNode(double value)
         {
             Value = value;
 

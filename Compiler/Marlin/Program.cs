@@ -23,7 +23,72 @@ namespace Marlin
             Tokenizer tokenizer = new("D:\\MarlinLang\\Tests\\HelloWorld\\someFile.mar");
             TokenStream tokenStream = tokenizer.Tokenize();
             MarlinParser parser = new(tokenStream);
-            GenerateImage(parser.Parse());
+            Node rootNode = parser.Parse();
+
+            if (DEBUG_MODE)
+            {
+                Console.BackgroundColor = ConsoleColor.White;
+                Console.ForegroundColor = ConsoleColor.Black;
+                Console.WriteLine("Tokens");
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.ForegroundColor = ConsoleColor.White;
+
+                // DO NOT USE TokenStream#Next()!!!!!!!!!!!!!
+                // You will screw up the parser, it'll begin from the end and reach EOF immediately!
+                foreach (Token token in tokenStream.GetTokens())
+                {
+                    Console.WriteLine(token);
+                }
+
+                Console.WriteLine();
+                Console.BackgroundColor = ConsoleColor.White;
+                Console.ForegroundColor = ConsoleColor.Black;
+                Console.WriteLine("Parsing");
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.ForegroundColor = ConsoleColor.White;
+            }
+
+            if (parser.warnings.Count != 0)
+            {
+                bool resumeCompilation = true;
+
+                // Keep track of what the console fg was
+                ConsoleColor previousColor = Console.ForegroundColor;
+
+                foreach (CompilerWarning warning in parser.warnings)
+                {
+                    resumeCompilation = resumeCompilation && (warning.WarningLevel != CompilerWarning.Level.ERROR);
+                    
+                    
+                    switch (warning.WarningLevel)
+                    {
+                        case CompilerWarning.Level.MESSAGE:
+                            Console.ForegroundColor = ConsoleColor.White;
+                            break;
+                        case CompilerWarning.Level.WARNING:
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            break;
+                        case CompilerWarning.Level.ERROR:
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            break;
+                    }
+
+                    Console.WriteLine(warning.RootCause.line + ":" + warning.RootCause.col + " - " + warning.Message);
+                }
+
+                // Restore previous console color
+                Console.ForegroundColor = previousColor;
+
+                if (!resumeCompilation)
+                {
+                    Console.WriteLine("Build FAILED");
+                    return;
+                }
+            }
+
+            Console.WriteLine("Build SUCCEEDED");
+
+            GenerateImage(rootNode);
         }
 
         public static void GenerateImage(Node root)
@@ -77,6 +142,7 @@ namespace Marlin
                 Console.WriteLine("   Debug: true");
                 Console.WriteLine("   Source dir: " + SOURCE_DIR);
                 Console.WriteLine("   Start class: " + START_CLASS);
+                Console.WriteLine();
             }
         }
 
