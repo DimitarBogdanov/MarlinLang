@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Marlin": {
+      "commandName": "Project",
+      "commandLineArgs": "--debug --src \"D:\\MarlinLang\\Tests\\HelloWorld\""
+    }
+  }
+}
