@@ -11,9 +11,13 @@ namespace Marlin.Parsing
             tokenStream = stream;
         }
 
-        public void Parse()
+        public Node Parse()
         {
-            tokenStream.Next();
+            Node rootNode = new Node("__ROOT__");
+
+            
+
+            return rootNode;
         }
     }
 }

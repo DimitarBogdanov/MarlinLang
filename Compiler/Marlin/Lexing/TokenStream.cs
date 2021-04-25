@@ -19,7 +19,6 @@ namespace Marlin.Lexing
         public void Add(Token token)
         {
             tokens.Add(token);
-            Console.WriteLine(token.ToString());
         }
 
         public Token Next()

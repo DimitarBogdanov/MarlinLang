@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Marlin.Lexing;
+using Marlin.Parsing;
+using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using TreeGenerator;
 
 namespace Marlin
@@ -16,6 +19,30 @@ namespace Marlin
         public static void Main(string[] args)
         {
             ParseOptions(args);
+
+            Tokenizer tokenizer = new("D:\\MarlinLang\\Tests\\HelloWorld\\someFile.mar");
+            TokenStream tokenStream = tokenizer.Tokenize();
+            MarlinParser parser = new(tokenStream);
+            GenerateImage(parser.Parse());
+        }
+
+        public static void GenerateImage(Node root)
+        {
+            TreeData.TreeDataTableDataTable table = new();
+            AddChildrenRecursively(root, table);
+            TreeBuilder builder = new(table)
+            {
+                BoxHeight = 30,
+                BoxWidth = 150,
+            };
+            Image.FromStream(builder.GenerateTree("__ROOT__", ImageFormat.Png)).Save("D:\\MarlinLang\\Tests\\HelloWorld\\tree.png");
+        }
+
+        private static void AddChildrenRecursively(Node node, TreeData.TreeDataTableDataTable table)
+        {
+            table.AddTreeDataTableRow(node.Id, (node.Parent != null ? node.Parent.Id : ""), node.Type.ToString(), node.ToString());
+            foreach (Node childNode in node.Children)
+                AddChildrenRecursively(childNode, table);
         }
 
         private static void ParseOptions(string[] args)
