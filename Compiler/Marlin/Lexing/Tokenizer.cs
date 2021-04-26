@@ -343,6 +343,7 @@ namespace Marlin.Lexing
                                             errors.Add(new(
                                                 level: Level.ERROR,
                                                 source: Source.LEXER,
+                                                code: ErrorCode.UNKNOWN_TOKEN,
                                                 message: "Unknown token '" + currentChar + "'",
                                                 rootCause: new Token(TokenType.UNKNOWN, currentChar.ToString(), line, col)
                                             ));
@@ -355,6 +356,7 @@ namespace Marlin.Lexing
                                     errors.Add(new(
                                         level: Level.ERROR,
                                         source: Source.LEXER,
+                                        code: ErrorCode.UNKNOWN_TOKEN,
                                         message: "Unknown token '" + currentChar + "'",
                                         rootCause: new Token(TokenType.UNKNOWN, currentChar.ToString(), line, col)
                                     ));

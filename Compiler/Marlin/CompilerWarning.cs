@@ -44,6 +44,11 @@ namespace Marlin
 
         public CompilerWarning(Level level, Source source, string code, string message, Token rootCause)
         {
+            if (source == Source.LEXER && level != Level.ERROR)
+            {
+                throw new System.Exception("lexer returned a " + level.ToString());
+            }
+
             WarningLevel = level;
             WarningSource = source;
             Code = code;
