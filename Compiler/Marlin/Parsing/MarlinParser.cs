@@ -117,6 +117,7 @@ namespace Marlin.Parsing
                         warnings.Add(new(
                             level: Level.ERROR,
                             source: Source.PARSER,
+                            code: ErrorCode.EXPECTED_ROOT_MEMBER,
                             message: "Unexpected '" + stream.Peek().value + "', expected class or namespace",
                             rootCause: stream.Peek()
                         ));
@@ -137,6 +138,7 @@ namespace Marlin.Parsing
                 warnings.Add(new(
                     level: Level.ERROR,
                     source: Source.PARSER,
+                    code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
                     message: "class name must be identifier",
                     rootCause: nameToken
                 ));
@@ -160,6 +162,7 @@ namespace Marlin.Parsing
                     warnings.Add(new(
                         level: Level.ERROR,
                         source: Source.PARSER,
+                        code: ErrorCode.EXPECTED_CLASS_MEMBER,
                         message: "expected function or '}', got " + stream.Peek().type,
                         rootCause: stream.Peek()
                     ));
@@ -174,6 +177,7 @@ namespace Marlin.Parsing
                 warnings.Add(new(
                     level: Level.ERROR,
                     source: Source.PARSER,
+                    code: ErrorCode.EXPECTED_SCOPE,
                     message: "class must have a scope (curly brackets)",
                     rootCause: stream.Peek()
                 ));
@@ -193,6 +197,7 @@ namespace Marlin.Parsing
                 warnings.Add(new(
                     level: Level.ERROR,
                     source: Source.PARSER,
+                    code: ErrorCode.EXPECTED_CLASS_MEMBER,
                     message: "expected function, got " + token.type,
                     rootCause: token
                 ));
@@ -210,6 +215,7 @@ namespace Marlin.Parsing
                 warnings.Add(new(
                     level: Level.ERROR,
                     source: Source.PARSER,
+                    code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
                     message: "function name must be identifier",
                     rootCause: nameToken
                 ));
@@ -230,6 +236,7 @@ namespace Marlin.Parsing
                         warnings.Add(new(
                             level: Level.ERROR,
                             source: Source.PARSER,
+                            code: ErrorCode.UNEXPECTED_EOF,
                             message: "unexpected EOF - unfinished argument list",
                             rootCause: stream.Peek()
                         ));
@@ -242,6 +249,7 @@ namespace Marlin.Parsing
                         warnings.Add(new(
                             level: Level.ERROR,
                             source: Source.PARSER,
+                            code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
                             message: "expected identifier for type, got " + argTypeToken.type,
                             rootCause: stream.Peek()
                         ));
@@ -252,6 +260,7 @@ namespace Marlin.Parsing
                         warnings.Add(new(
                             level: Level.ERROR,
                             source: Source.PARSER,
+                            code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
                             message: "expected identifier for name, got " + argNameToken.type,
                             rootCause: stream.Peek()
                         ));
@@ -266,6 +275,7 @@ namespace Marlin.Parsing
                             warnings.Add(new(
                                 level: Level.ERROR,
                                 source: Source.PARSER,
+                                code: ErrorCode.CANNOT_HAVE_PAREN_AFTER_COMMA_ARGLIST,
                                 message: "cannot have ')' after comma in argument list",
                                 rootCause: stream.Peek()
                             ));
@@ -283,6 +293,7 @@ namespace Marlin.Parsing
                         warnings.Add(new(
                             level: Level.ERROR,
                             source: Source.PARSER,
+                            code: ErrorCode.EXPECTED_COMMA_ARGLIST,
                             message: "expected comma",
                             rootCause: stream.Peek()
                         ));
@@ -300,6 +311,7 @@ namespace Marlin.Parsing
                         warnings.Add(new(
                             level: Level.ERROR,
                             source: Source.PARSER,
+                            code: ErrorCode.EXPECTED_PAREN_CLOSE_ARGLIST,
                             message: "expected ')' to close arguments list, got " + stream.Peek().type,
                             rootCause: stream.Peek()
                         ));
@@ -324,6 +336,7 @@ namespace Marlin.Parsing
                     warnings.Add(new(
                         level: Level.ERROR,
                         source: Source.PARSER,
+                        code: ErrorCode.EXPECTED_FUNCTION_MEMBER,
                         message: "expected statement or '}', got " + stream.Peek().type,
                         rootCause: stream.Peek()
                     ));
@@ -340,6 +353,7 @@ namespace Marlin.Parsing
                 warnings.Add(new(
                     level: Level.ERROR,
                     source: Source.PARSER,
+                    code: ErrorCode.EXPECTED_SCOPE,
                     message: "function must have a scope (curly brackets)",
                     rootCause: stream.Peek()
                 ));
@@ -366,6 +380,7 @@ namespace Marlin.Parsing
                     warnings.Add(new(
                         level: Level.ERROR,
                         source: Source.PARSER,
+                        code: ErrorCode.EXPECTED_STATEMENT,
                         message: "expected statement, got " + stream.Peek().type,
                         rootCause: stream.Peek()
                     ));
@@ -395,6 +410,7 @@ namespace Marlin.Parsing
                     warnings.Add(new(
                         level: Level.ERROR,
                         source: Source.PARSER,
+                        code: ErrorCode.EXPECTED_EXPRESSION,
                         message: "expected variable or number, got " + stream.Peek().type,
                         rootCause: stream.Peek()
                     ));
@@ -428,6 +444,7 @@ namespace Marlin.Parsing
                 warnings.Add(new(
                     level: Level.ERROR,
                     source: Source.PARSER,
+                    code: ErrorCode.EXPECTED_ANON_SCOPE_MEMBER,
                     message: "expected '}', got " + stream.Peek().type,
                     rootCause: stream.Peek()
                 ));
@@ -458,6 +475,7 @@ namespace Marlin.Parsing
                             warnings.Add(new(
                                 level: Level.ERROR,
                                 source: Source.PARSER,
+                                code: ErrorCode.UNEXPECTED_EOF,
                                 message: "unexpected EOF - unfinished argument list",
                                 rootCause: stream.Peek()
                             ));
@@ -473,6 +491,7 @@ namespace Marlin.Parsing
                                 warnings.Add(new(
                                     level: Level.ERROR,
                                     source: Source.PARSER,
+                                    code: ErrorCode.CANNOT_HAVE_PAREN_AFTER_COMMA_ARGLIST,
                                     message: "cannot have ')' after comma in argument list",
                                     rootCause: stream.Peek()
                                 ));
@@ -490,6 +509,7 @@ namespace Marlin.Parsing
                             warnings.Add(new(
                                 level: Level.ERROR,
                                 source: Source.PARSER,
+                                code: ErrorCode.EXPECTED_COMMA_ARGLIST,
                                 message: "expected comma",
                                 rootCause: stream.Peek()
                             ));
@@ -507,6 +527,7 @@ namespace Marlin.Parsing
                             warnings.Add(new(
                                 level: Level.ERROR,
                                 source: Source.PARSER,
+                                code: ErrorCode.EXPECTED_PAREN_CLOSE_ARGLIST,
                                 message: "expected ')' to close arguments list, got " + stream.Peek().type,
                                 rootCause: stream.Peek()
                             ));
@@ -523,6 +544,7 @@ namespace Marlin.Parsing
                         warnings.Add(new(
                             level: Level.ERROR,
                             source: Source.PARSER,
+                            code: ErrorCode.MISSING_SEMICOLON,
                             message: "missing semicolon",
                             rootCause: stream.Peek()
                         ));
@@ -548,6 +570,7 @@ namespace Marlin.Parsing
                         warnings.Add(new(
                             level: Level.ERROR,
                             source: Source.PARSER,
+                            code: ErrorCode.MISSING_SEMICOLON,
                             message: "missing semicolon",
                             rootCause: stream.Peek()
                         ));
@@ -560,6 +583,7 @@ namespace Marlin.Parsing
                 warnings.Add(new(
                     level: Level.ERROR,
                     source: Source.PARSER,
+                    code: ErrorCode.EXPECTED_FUNC_CALL_OR_VAR_ASSIGN,
                     message: "expected function call or variable assignment, got " + stream.Peek().type,
                     rootCause: stream.Peek()
                 ));
@@ -582,6 +606,7 @@ namespace Marlin.Parsing
                             warnings.Add(new(
                                 level: Level.ERROR,
                                 source: Source.PARSER,
+                                code: ErrorCode.UNEXPECTED_EOF,
                                 message: "unexpected EOF - unfinished argument list",
                                 rootCause: stream.Peek()
                             ));
@@ -597,6 +622,7 @@ namespace Marlin.Parsing
                                 warnings.Add(new(
                                     level: Level.ERROR,
                                     source: Source.PARSER,
+                                    code: ErrorCode.CANNOT_HAVE_PAREN_AFTER_COMMA_ARGLIST,
                                     message: "cannot have ')' after comma in argument list",
                                     rootCause: stream.Peek()
                                 ));
@@ -613,6 +639,7 @@ namespace Marlin.Parsing
                             warnings.Add(new(
                                 level: Level.ERROR,
                                 source: Source.PARSER,
+                                code: ErrorCode.EXPECTED_COMMA_ARGLIST,
                                 message: "expected comma",
                                 rootCause: stream.Peek()
                             ));
@@ -630,6 +657,7 @@ namespace Marlin.Parsing
                             warnings.Add(new(
                                 level: Level.ERROR,
                                 source: Source.PARSER,
+                                code: ErrorCode.EXPECTED_PAREN_CLOSE_ARGLIST,
                                 message: "expected ')' to close arguments list, got " + stream.Peek().type,
                                 rootCause: stream.Peek()
                             ));
@@ -642,6 +670,7 @@ namespace Marlin.Parsing
                         warnings.Add(new(
                             level: Level.ERROR,
                             source: Source.PARSER,
+                            code: ErrorCode.UNEXPECTED_SEMICOLON,
                             message: "unexpected semicolon",
                             rootCause: stream.Peek()
                         ));
@@ -664,13 +693,7 @@ namespace Marlin.Parsing
                 return new NumberIntegerNode(int.Parse(integer.value));
             } else
             {
-                warnings.Add(new(
-                    level: Level.ERROR,
-                    source: Source.PARSER,
-                    message: "expected integer, got " + stream.Peek().type,
-                    rootCause: stream.Peek()
-                ));
-                return null;
+                throw new Exception("Can't create int");
             }
         }
 
@@ -682,13 +705,7 @@ namespace Marlin.Parsing
                 return new NumberDoubleNode(double.Parse(dbl.value));
             } else
             {
-                warnings.Add(new(
-                    level: Level.ERROR,
-                    source: Source.PARSER,
-                    message: "expected double, got " + stream.Peek().type,
-                    rootCause: stream.Peek()
-                ));
-                return null;
+                throw new Exception("Can't create double");
             }
         }
 
@@ -714,6 +731,7 @@ namespace Marlin.Parsing
                     warnings.Add(new(
                         level: Level.ERROR,
                         source: Source.PARSER,
+                        code: ErrorCode.MISSING_OPERATOR_RIGHT,
                         message: "expected something to the right of '" + binOp.value + "'",
                         rootCause: stream.Peek()
                     ));
