@@ -23,13 +23,13 @@ namespace Marlin
             Tokenizer tokenizer = new("D:\\MarlinLang\\Tests\\HelloWorld\\someFile.mar");
             TokenStream tokenStream = tokenizer.Tokenize();
             MarlinParser parser = new(tokenStream);
-            Node rootNode = parser.Parse();
+            Node rootNode = null;
 
             if (DEBUG_MODE)
             {
                 Console.BackgroundColor = ConsoleColor.White;
                 Console.ForegroundColor = ConsoleColor.Black;
-                Console.WriteLine("Tokens");
+                Console.WriteLine("TOKENS");
                 Console.BackgroundColor = ConsoleColor.Black;
                 Console.ForegroundColor = ConsoleColor.White;
 
@@ -43,9 +43,36 @@ namespace Marlin
                 Console.WriteLine();
                 Console.BackgroundColor = ConsoleColor.White;
                 Console.ForegroundColor = ConsoleColor.Black;
-                Console.WriteLine("Parsing");
+                Console.WriteLine("ERRORS");
                 Console.BackgroundColor = ConsoleColor.Black;
                 Console.ForegroundColor = ConsoleColor.White;
+            }
+
+            if (tokenizer.errors.Count == 0)
+            {
+                rootNode = parser.Parse();
+            } else
+            {
+                ConsoleColor previousColor = Console.ForegroundColor;
+                foreach (CompilerWarning err in tokenizer.errors)
+                {
+                    switch (err.WarningLevel)
+                    {
+                        case CompilerWarning.Level.MESSAGE:
+                            Console.ForegroundColor = ConsoleColor.White;
+                            break;
+                        case CompilerWarning.Level.WARNING:
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            break;
+                        case CompilerWarning.Level.ERROR:
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            break;
+                    }
+
+                    Console.WriteLine(err.RootCause.line + ":" + err.RootCause.col + " - " + err.Message);
+                }
+                Console.ForegroundColor = previousColor;
+                return;
             }
 
             if (parser.warnings.Count != 0)
@@ -84,8 +111,12 @@ namespace Marlin
                     Console.WriteLine("Build FAILED");
                     return;
                 }
+            } else
+            {
+                Console.WriteLine("No errors, warnings or messages");
             }
-
+            
+            Console.WriteLine();
             Console.WriteLine("Build SUCCEEDED");
 
             GenerateImage(rootNode);
@@ -94,20 +125,20 @@ namespace Marlin
         public static void GenerateImage(Node root)
         {
             TreeData.TreeDataTableDataTable table = new();
-            AddChildrenRecursively(root, table);
+            AddChildrenRecursively(root, null, table);
             TreeBuilder builder = new(table)
             {
-                BoxHeight = 30,
-                BoxWidth = 150,
+                BoxHeight = 45,
+                BoxWidth = 160,
             };
             Image.FromStream(builder.GenerateTree("__ROOT__", ImageFormat.Png)).Save("D:\\MarlinLang\\Tests\\HelloWorld\\tree.png");
         }
 
-        private static void AddChildrenRecursively(Node node, TreeData.TreeDataTableDataTable table)
+        private static void AddChildrenRecursively(Node node, Node parent, TreeData.TreeDataTableDataTable table)
         {
-            table.AddTreeDataTableRow(node.Id, (node.Parent != null ? node.Parent.Id : ""), node.Type.ToString(), node.ToString());
+            table.AddTreeDataTableRow(node.Id, (parent != null ? parent.Id : ""), node.Type.ToString(), node.ToString());
             foreach (Node childNode in node.Children)
-                AddChildrenRecursively(childNode, table);
+                AddChildrenRecursively(childNode, node, table);
         }
 
         private static void ParseOptions(string[] args)

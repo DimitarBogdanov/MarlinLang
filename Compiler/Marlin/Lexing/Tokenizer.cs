@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using static Marlin.CompilerWarning;
 
 namespace Marlin.Lexing
 {
@@ -7,6 +9,7 @@ namespace Marlin.Lexing
     {
         private readonly string path;
         private readonly TokenStream tokens;
+        public List<CompilerWarning> errors = new();
 
         public Tokenizer(string path)
         {
@@ -123,6 +126,7 @@ namespace Marlin.Lexing
                     {
                         tokens.Add(new(TokenType.DECIMAL, current, line, (col - current.Length)));
                         inInteger = false;
+                        inDecimal = false;
                         current = "";
                         goto REPROCESS_CURRENT;
                     }
@@ -147,9 +151,6 @@ namespace Marlin.Lexing
                         case '+':
                             tokens.Add(new(TokenType.PLUS, "+", line, col));
                             continue;
-                        case '-':
-                            tokens.Add(new(TokenType.MINUS, "-", line, col));
-                            continue;
                         case '^':
                             tokens.Add(new(TokenType.POWER, "^", line, col));
                             continue;
@@ -157,6 +158,20 @@ namespace Marlin.Lexing
                         case '*':
                             tokens.Add(new(TokenType.MULTIPLY, "*", line, col));
                             continue;
+
+                        case '-':
+                            {
+                                if ((reader.Peek() == '.') || char.IsDigit((char) reader.Peek()))
+                                {
+                                    inInteger = true;
+                                    current = "-0";
+                                    continue;
+                                } else
+                                {
+                                    tokens.Add(new(TokenType.MINUS, "-", line, col));
+                                    continue;
+                                }
+                            }
 
                         case '/':
                             {
@@ -183,8 +198,17 @@ namespace Marlin.Lexing
                             {
                                 if (char.IsDigit((char)reader.Peek()))
                                 {
-                                    inDecimal = true;
-                                    current = "0.";
+                                    if (inInteger)
+                                    {
+                                        inInteger = false;
+                                        inDecimal = true;
+                                        current += ".";
+                                    } else
+                                    {
+                                        inDecimal = true;
+                                        current = "0.";
+                                    }
+                                    
                                     continue;
                                 }
                                 else
@@ -314,11 +338,26 @@ namespace Marlin.Lexing
                                     }
                                     else
                                     {
+                                        if (currentChar > 32)
+                                        {
+                                            errors.Add(new(
+                                                level: Level.ERROR,
+                                                source: Source.LEXER,
+                                                message: "Unknown token '" + currentChar + "'",
+                                                rootCause: new Token(TokenType.UNKNOWN, currentChar.ToString(), line, col)
+                                            ));
+                                        }
                                         continue;
                                     }
                                 }
                                 else
                                 {
+                                    errors.Add(new(
+                                        level: Level.ERROR,
+                                        source: Source.LEXER,
+                                        message: "Unknown token '" + currentChar + "'",
+                                        rootCause: new Token(TokenType.UNKNOWN, currentChar.ToString(), line, col)
+                                    ));
                                     tokens.Add(new(TokenType.UNKNOWN, currentChar.ToString(), line, col));
                                     continue;
                                 }

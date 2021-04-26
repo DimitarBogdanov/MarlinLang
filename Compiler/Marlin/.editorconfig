@@ -1,1 +1,5 @@
 ﻿file_header_template = ---------------------------------------------------\n{fileName}---------------------------------------------------\nCopyright (C) Dimitar Bogdanov\nAll rights reserved.
+[*.cs]
+
+# IDE0055: Fix formatting
+dotnet_diagnostic.IDE0055.severity = none

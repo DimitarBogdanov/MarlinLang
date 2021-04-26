@@ -5,7 +5,7 @@ namespace Marlin.Parsing
 {
     public enum NodeType
     {
-        ROOT,
+        BLOCK,
         BINARY_OPERATOR,
         FUNCTION,
         FUNCTION_CALL,
@@ -22,7 +22,7 @@ namespace Marlin.Parsing
         public string Id { get; set; } = "";
         public Node Parent { get; set; } = null;
         public List<Node> Children { get; set; } = new();
-        public NodeType Type { get; set; } = NodeType.ROOT;
+        public NodeType Type { get; set; } = NodeType.BLOCK;
 
         public Node(string id = "")
         {
@@ -50,10 +50,17 @@ namespace Marlin.Parsing
     public class BinaryOperatorNode : Node
     {
         public string Value { get; private set; }
+        public Node Left { get; private set; }
+        public Node Right { get; private set; }
 
-        public BinaryOperatorNode(string value)
+        public BinaryOperatorNode(string value, Node left, Node right)
         {
             Value = value;
+            Left = left;
+            Right = right;
+
+            Children.Add(left);
+            Children.Add(right);
 
             Type = NodeType.BINARY_OPERATOR;
         }
@@ -78,6 +85,80 @@ namespace Marlin.Parsing
         public override string ToString()
         {
             return "ClassTemplate<" + Name + ">";
+        }
+    }
+
+    public class FuncNode : Node
+    {
+        public string Name { get; private set; }
+        public List<KeyValuePair<VarNode, VarNode>> Args { get; private set; }
+
+        public FuncNode(string name, List<KeyValuePair<VarNode, VarNode>> args)
+        {
+            Name = name;
+            Args = args;
+
+            Type = NodeType.FUNCTION;
+        }
+
+        public override string ToString()
+        {
+            return "Func<" + Name + ">\n" + Args.Count + " arg(s)";
+        }
+    }
+
+    public class FuncCallNode : Node
+    {
+        public string Name { get; private set; }
+
+        public FuncCallNode(string name, List<Node> args)
+        {
+            Name = name;
+            Children = args;
+
+            Type = NodeType.FUNCTION_CALL;
+        }
+
+        public override string ToString()
+        {
+            return "Call<" + Name + ">\n" + Children.Count + " arg(s)";
+        }
+    }
+
+    public class VarNode : Node
+    {
+        public string Name { get; private set; }
+
+        public VarNode(string name)
+        {
+            Name = name;
+
+            Type = NodeType.VARIABLE_REFERENCE;
+        }
+
+        public override string ToString()
+        {
+            return "VarRef<" + Name + ">";
+        }
+    }
+
+    public class VarAssignNode : Node
+    {
+        public string Name { get; private set; }
+        public Node Value { get; private set; }
+
+        public VarAssignNode(string name, Node value)
+        {
+            Name = name;
+            Value = value;
+            Children.Add(value);
+
+            Type = NodeType.VARIABLE_ASSIGNMENT;
+        }
+
+        public override string ToString()
+        {
+            return "VarAssign<" + Name + ">";
         }
     }
 

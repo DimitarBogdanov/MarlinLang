@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v5.0": {
       "Marlin/0.0.1": {
         "dependencies": {
+          "System.Collections": "4.3.0",
           "System.Drawing.Common": "6.0.0-preview.1.21102.12",
           "TreeGenerator": "1.0.0.0"
         },
@@ -16,6 +17,7 @@
         }
       },
       "Microsoft.NETCore.Platforms/6.0.0-preview.1.21102.12": {},
+      "Microsoft.NETCore.Targets/1.1.0": {},
       "Microsoft.Win32.SystemEvents/6.0.0-preview.1.21102.12": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "6.0.0-preview.1.21102.12"
@@ -33,6 +35,13 @@
             "assemblyVersion": "6.0.0.0",
             "fileVersion": "6.0.21.10212"
           }
+        }
+      },
+      "System.Collections/4.3.0": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "6.0.0-preview.1.21102.12",
+          "Microsoft.NETCore.Targets": "1.1.0",
+          "System.Runtime": "4.3.0"
         }
       },
       "System.Drawing.Common/6.0.0-preview.1.21102.12": {
@@ -60,6 +69,12 @@
           }
         }
       },
+      "System.Runtime/4.3.0": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "6.0.0-preview.1.21102.12",
+          "Microsoft.NETCore.Targets": "1.1.0"
+        }
+      },
       "TreeGenerator/1.0.0.0": {
         "runtime": {
           "TreeGenerator.dll": {
@@ -83,6 +98,13 @@
       "path": "microsoft.netcore.platforms/6.0.0-preview.1.21102.12",
       "hashPath": "microsoft.netcore.platforms.6.0.0-preview.1.21102.12.nupkg.sha512"
     },
+    "Microsoft.NETCore.Targets/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-aOZA3BWfz9RXjpzt0sRJJMjAscAUm3Hoa4UWAfceV9UTYxgwZ1lZt5nO2myFf+/jetYQo4uTP7zS8sJY67BBxg==",
+      "path": "microsoft.netcore.targets/1.1.0",
+      "hashPath": "microsoft.netcore.targets.1.1.0.nupkg.sha512"
+    },
     "Microsoft.Win32.SystemEvents/6.0.0-preview.1.21102.12": {
       "type": "package",
       "serviceable": true,
@@ -90,12 +112,26 @@
       "path": "microsoft.win32.systemevents/6.0.0-preview.1.21102.12",
       "hashPath": "microsoft.win32.systemevents.6.0.0-preview.1.21102.12.nupkg.sha512"
     },
+    "System.Collections/4.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3Dcj85/TBdVpL5Zr+gEEBUuFe2icOnLalmEh9hfck1PTYbbyWuZgh4fmm2ysCLTrqLQw6t3TgTyJ+VLp+Qb+Lw==",
+      "path": "system.collections/4.3.0",
+      "hashPath": "system.collections.4.3.0.nupkg.sha512"
+    },
     "System.Drawing.Common/6.0.0-preview.1.21102.12": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-VfxLOd9L442ax5pxvMfqhQb5lS8/Z2j7zwJWAhAWtsgIyKlveV82RA9GbEJ2q8xq3s3sYyyoXgWGlyVKjBv1hw==",
       "path": "system.drawing.common/6.0.0-preview.1.21102.12",
       "hashPath": "system.drawing.common.6.0.0-preview.1.21102.12.nupkg.sha512"
+    },
+    "System.Runtime/4.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-JufQi0vPQ0xGnAczR13AUFglDyVYt4Kqnz1AZaiKZ5+GICq0/1MH/mO/eAJHt/mHW1zjKBJd7kV26SrxddAhiw==",
+      "path": "system.runtime/4.3.0",
+      "hashPath": "system.runtime.4.3.0.nupkg.sha512"
     },
     "TreeGenerator/1.0.0.0": {
       "type": "reference",

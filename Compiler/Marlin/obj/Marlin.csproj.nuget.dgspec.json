@@ -40,6 +40,10 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "dependencies": {
+            "System.Collections": {
+              "target": "Package",
+              "version": "[4.3.0, )"
+            },
             "System.Drawing.Common": {
               "target": "Package",
               "version": "[6.0.0-preview.1.21102.12, )"
