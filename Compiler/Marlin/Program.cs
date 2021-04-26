@@ -159,12 +159,14 @@ namespace Marlin
             if (!options.HasOption("--src", true))
             {
                 Console.WriteLine("No source directory! Run \"marlin --help\" for instructions.");
-                return;
+                Environment.Exit(0);
             }
 
             DEBUG_MODE = options.HasOption("--debug");
             SOURCE_DIR = options.GetOption("--src");
-            START_CLASS = options.HasOption("--startClass") ? options.GetOption("--startClass") : START_CLASS;
+            START_CLASS = options.HasOption("--startClass", true) ? options.GetOption("--startClass") : START_CLASS;
+
+            Console.WriteLine(START_CLASS + $", {options.HasOption("--startClass")} {options.GetOption("--startClass")}");
 
             if (DEBUG_MODE)
             {

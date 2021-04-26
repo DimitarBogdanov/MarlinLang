@@ -17,6 +17,7 @@ namespace Marlin
 
         public bool HasOption(string option, bool requireValue = false)
         {
+            option = option.ToLower();
             foreach (string str in arguments)
             {
                 if (str.ToLower() == option)
@@ -36,6 +37,7 @@ namespace Marlin
         
         public string GetOption(string option)
         {
+            option = option.ToLower();
             for (int i = 0; i < arguments.Count; i++)
             {
                 if (arguments[i].ToLower() == option)
