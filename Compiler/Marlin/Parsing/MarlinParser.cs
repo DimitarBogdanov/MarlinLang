@@ -15,7 +15,7 @@ using static Marlin.CompilerWarning;
 
 namespace Marlin.Parsing
 {
-    public class MarlinParser
+    public class MarlinParser : IMarlinParser
     {
         private readonly TokenStream stream;
         public List<CompilerWarning> warnings = new();

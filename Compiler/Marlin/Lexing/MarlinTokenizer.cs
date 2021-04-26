@@ -14,13 +14,13 @@ using static Marlin.CompilerWarning;
 
 namespace Marlin.Lexing
 {
-    public class Tokenizer
+    public class MarlinTokenizer : IMarlinTokenizer
     {
         private readonly string path;
         private readonly TokenStream tokens;
         public List<CompilerWarning> errors = new();
 
-        public Tokenizer(string path)
+        public MarlinTokenizer(string path)
         {
             this.path = path;
             tokens = new();

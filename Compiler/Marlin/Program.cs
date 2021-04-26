@@ -31,7 +31,7 @@ namespace Marlin
         {
             ParseOptions(args);
 
-            Tokenizer tokenizer = new("D:\\MarlinLang\\Tests\\HelloWorld\\someFile.mar");
+            MarlinTokenizer tokenizer = new("D:\\MarlinLang\\Tests\\HelloWorld\\someFile.mar");
             TokenStream tokenStream = tokenizer.Tokenize();
             MarlinParser parser = new(tokenStream);
             Node rootNode;
