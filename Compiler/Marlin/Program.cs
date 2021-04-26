@@ -1,4 +1,15 @@
-﻿using Marlin.Lexing;
+﻿/*
+ * Copyright (C) Dimitar Bogdanov
+ * Filename:     Program.cs
+ * Project:      Marlin Compiler
+ * License:      Creative Commons Attribution NoDerivs (CC-ND)
+ * 
+ * Refer to the "LICENSE" file, or to the following link:
+ * https://creativecommons.org/licenses/by-nd/3.0/
+ */
+
+
+using Marlin.Lexing;
 using Marlin.Parsing;
 using System;
 using System.Drawing;
@@ -23,7 +34,7 @@ namespace Marlin
             Tokenizer tokenizer = new("D:\\MarlinLang\\Tests\\HelloWorld\\someFile.mar");
             TokenStream tokenStream = tokenizer.Tokenize();
             MarlinParser parser = new(tokenStream);
-            Node rootNode = null;
+            Node rootNode;
 
             if (DEBUG_MODE)
             {
@@ -171,9 +182,9 @@ namespace Marlin
             if (DEBUG_MODE)
             {
                 Console.WriteLine("Started Marlin compiler");
-                Console.WriteLine("   Args: " + string.Join(' ', args));
-                Console.WriteLine("   Debug: true");
-                Console.WriteLine("   Source dir: " + SOURCE_DIR);
+                Console.WriteLine("   Args:        " + string.Join(' ', args));
+                Console.WriteLine("   Debug:       true");
+                Console.WriteLine("   Source dir:  " + SOURCE_DIR);
                 Console.WriteLine("   Start class: " + START_CLASS);
                 Console.WriteLine();
             }

@@ -1,4 +1,14 @@
-﻿using System;
+﻿/*
+ * Copyright (C) Dimitar Bogdanov
+ * Filename:     Node.cs
+ * Project:      Marlin Compiler
+ * License:      Creative Commons Attribution NoDerivs (CC-ND)
+ * 
+ * Refer to the "LICENSE" file, or to the following link:
+ * https://creativecommons.org/licenses/by-nd/3.0/
+ */
+
+using System;
 using System.Collections.Generic;
 
 namespace Marlin.Parsing

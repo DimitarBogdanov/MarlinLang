@@ -1,4 +1,14 @@
-﻿using Marlin.Lexing;
+﻿/*
+ * Copyright (C) Dimitar Bogdanov
+ * Filename:     CompilerWarning.cs
+ * Project:      Marlin Compiler
+ * License:      Creative Commons Attribution NoDerivs (CC-ND)
+ * 
+ * Refer to the "LICENSE" file, or to the following link:
+ * https://creativecommons.org/licenses/by-nd/3.0/
+ */
+
+using Marlin.Lexing;
 
 namespace Marlin
 {

@@ -1,4 +1,13 @@
-﻿using System;
+﻿/*
+ * Copyright (C) Dimitar Bogdanov
+ * Filename:     Tokenizer.cs
+ * Project:      Marlin Compiler
+ * License:      Creative Commons Attribution NoDerivs (CC-ND)
+ * 
+ * Refer to the "LICENSE" file, or to the following link:
+ * https://creativecommons.org/licenses/by-nd/3.0/
+ */
+
 using System.Collections.Generic;
 using System.IO;
 using static Marlin.CompilerWarning;
@@ -64,7 +73,16 @@ namespace Marlin.Lexing
                 }
 
             REPROCESS_CURRENT:
-                if (inIdentifier)
+                if (inBlockComment)
+                {
+                    if (currentChar == '*' && reader.Peek() == '/')
+                    {
+                        reader.Read();
+                        inBlockComment = false;
+                        continue;
+                    }
+                }
+                else if (inIdentifier)
                 {
                     if (currentChar == '_' || char.IsLetterOrDigit(currentChar))
                     {
