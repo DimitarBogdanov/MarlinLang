@@ -1,5 +1,4 @@
-﻿using Marlin.Parsing;
-/*
+﻿/*
  * Copyright (C) Dimitar Bogdanov
  * Filename:     SymbolTableManager.cs
  * Project:      Marlin Compiler
@@ -9,6 +8,7 @@
  * https://creativecommons.org/licenses/by-nd/3.0/
  */
 
+using Marlin.Parsing;
 using System.Collections.Generic;
 using static Marlin.CompilerWarning;
 
@@ -16,18 +16,24 @@ namespace Marlin.SemanticAnalysis
 {
     public class SymbolTableManager
     {
+        private readonly string file;
         private readonly Dictionary<string, SymbolData> symbols = new();
-        public readonly List<CompilerWarning> warnings = new();
+        
+        public SymbolTableManager(string file)
+        {
+            this.file = file;
+        }
 
-        public void AddSymbol(string id, SymbolData data, Node nodeReference)
+        public void AddSymbol(string id, SymbolData data, Node nodeReference, MarlinSemanticAnalyser analyser)
         {
             if (symbols.ContainsKey(id))
             {
-                warnings.Add(new(
+                analyser.AddWarning(new(
                     level: Level.ERROR,
                     source: Source.SEMANTIC_ANALYSIS,
                     code: ErrorCode.SYMBOL_ALREADY_EXISTS,
                     message: "symbol '" + data.name + "' already exists",
+                    file: file,
                     rootCause: nodeReference.Token
                 ));
             }
@@ -37,18 +43,19 @@ namespace Marlin.SemanticAnalysis
             }
         }
 
-        public void UpdateSymbol(string id, SymbolData data, Node nodeReference)
+        public void UpdateSymbol(string id, SymbolData data, Node nodeReference, MarlinSemanticAnalyser analyser)
         {
             if (symbols.ContainsKey(id))
             {
                 symbols.Remove(id);
             } else
             {
-                warnings.Add(new(
+                analyser.AddWarning(new(
                     level: Level.ERROR,
                     source: Source.SEMANTIC_ANALYSIS,
                     code: ErrorCode.UNKNOWN_SYMBOL,
                     message: "unknown symbol '" + data.name + "'",
+                    file: file,
                     rootCause: nodeReference.Token 
                 ));
             }

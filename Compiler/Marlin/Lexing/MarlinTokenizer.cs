@@ -260,6 +260,7 @@ namespace Marlin.Lexing
                                         source: Source.LEXER,
                                         code: ErrorCode.UNKNOWN_TOKEN,
                                         message: "Unknown token '&'",
+                                        file: path,
                                         rootCause: new Token(TokenType.UNKNOWN, currentChar.ToString(), line, col)
                                     ));
                                     tokens.Add(new(TokenType.UNKNOWN, currentChar.ToString(), line, col));
@@ -281,6 +282,7 @@ namespace Marlin.Lexing
                                         source: Source.LEXER,
                                         code: ErrorCode.UNKNOWN_TOKEN,
                                         message: "Unknown token '|'",
+                                        file: path,
                                         rootCause: new Token(TokenType.UNKNOWN, currentChar.ToString(), line, col)
                                     ));
                                     tokens.Add(new(TokenType.UNKNOWN, currentChar.ToString(), line, col));
@@ -405,6 +407,7 @@ namespace Marlin.Lexing
                                                 source: Source.LEXER,
                                                 code: ErrorCode.UNKNOWN_TOKEN,
                                                 message: "Unknown token '" + currentChar + "'",
+                                                file: path,
                                                 rootCause: new Token(TokenType.UNKNOWN, currentChar.ToString(), line, col)
                                             ));
                                         }
@@ -418,6 +421,7 @@ namespace Marlin.Lexing
                                         source: Source.LEXER,
                                         code: ErrorCode.UNKNOWN_TOKEN,
                                         message: "Unknown token '" + currentChar + "'",
+                                        file: path,
                                         rootCause: new Token(TokenType.UNKNOWN, currentChar.ToString(), line, col)
                                     ));
                                     tokens.Add(new(TokenType.UNKNOWN, currentChar.ToString(), line, col));

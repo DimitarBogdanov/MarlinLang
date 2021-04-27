@@ -8,12 +8,11 @@
  * https://creativecommons.org/licenses/by-nd/3.0/
  */
 
-
-using Marlin.Lexing;
 using Marlin.Parsing;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using TreeGenerator;
 
 namespace Marlin
@@ -31,111 +30,7 @@ namespace Marlin
         {
             ParseOptions(args);
 
-            MarlinTokenizer tokenizer = new("D:\\MarlinLang\\Tests\\HelloWorld\\someFile.mar");
-            TokenStream tokenStream = tokenizer.Tokenize();
-            MarlinParser parser = new(tokenStream);
-            Node rootNode;
-
-            if (DEBUG_MODE)
-            {
-                Console.BackgroundColor = ConsoleColor.White;
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.WriteLine("TOKENS");
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.ForegroundColor = ConsoleColor.White;
-
-                // DO NOT USE TokenStream#Next()!!!!!!!!!!!!!
-                // You will screw up the parser, it'll begin from the end and reach EOF immediately!
-                foreach (Token token in tokenStream.GetTokens())
-                {
-                    Console.WriteLine(token);
-                }
-
-                Console.WriteLine();
-                Console.BackgroundColor = ConsoleColor.White;
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.WriteLine("ERRORS");
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.ForegroundColor = ConsoleColor.White;
-            }
-
-            if (tokenizer.errors.Count == 0)
-            {
-                rootNode = parser.Parse();
-            } else
-            {
-                ConsoleColor previousColor = Console.ForegroundColor;
-                foreach (CompilerWarning err in tokenizer.errors)
-                {
-                    switch (err.WarningLevel)
-                    {
-                        case CompilerWarning.Level.MESSAGE:
-                            Console.ForegroundColor = ConsoleColor.White;
-                            break;
-                        case CompilerWarning.Level.WARNING:
-                            Console.ForegroundColor = ConsoleColor.Yellow;
-                            break;
-                        case CompilerWarning.Level.ERROR:
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            break;
-                    }
-
-                    Console.WriteLine(err.RootCause.line + ":" + err.RootCause.col + " - " + err.Message);
-                }
-                Console.ForegroundColor = previousColor;
-                return;
-            }
-
-            if (parser.warnings.Count != 0)
-            {
-                bool resumeCompilation = true;
-
-                // Keep track of what the console fg was
-                ConsoleColor previousColor = Console.ForegroundColor;
-
-                foreach (CompilerWarning warning in parser.warnings)
-                {
-                    resumeCompilation = resumeCompilation && (warning.WarningLevel != CompilerWarning.Level.ERROR);
-                    
-                    
-                    switch (warning.WarningLevel)
-                    {
-                        case CompilerWarning.Level.MESSAGE:
-                            Console.ForegroundColor = ConsoleColor.White;
-                            break;
-                        case CompilerWarning.Level.WARNING:
-                            Console.ForegroundColor = ConsoleColor.Yellow;
-                            break;
-                        case CompilerWarning.Level.ERROR:
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            break;
-                    }
-
-                    Console.WriteLine(warning.RootCause.line + ":" + warning.RootCause.col + " - " + warning.Message);
-                }
-
-                // Restore previous console color
-                Console.ForegroundColor = previousColor;
-
-                if (!resumeCompilation)
-                {
-                    Console.WriteLine("Build FAILED");
-                    return;
-                }
-            } else if (DEBUG_MODE)
-            {
-                Console.WriteLine("No errors, warnings or messages");
-            }
-            
-            Console.WriteLine();
-            Console.WriteLine("Build SUCCEEDED");
-
-            GenerateImage(rootNode);
-        }
-
-        public static void Build()
-        {
-
+            MarlinProgramBuilder.Build();
         }
 
         public static void GenerateImage(Node root)
@@ -147,7 +42,7 @@ namespace Marlin
                 BoxHeight = 45,
                 BoxWidth = 160,
             };
-            Image.FromStream(builder.GenerateTree("__ROOT__", ImageFormat.Png)).Save("D:\\MarlinLang\\Tests\\HelloWorld\\tree.png");
+            Image.FromStream(builder.GenerateTree("__ROOT__", ImageFormat.Png)).Save(Path.Combine(SOURCE_DIR, "compiler_source_tree.png"));
         }
 
         private static void AddChildrenRecursively(Node node, Node parent, TreeData.TreeDataTableDataTable table)
@@ -181,6 +76,9 @@ namespace Marlin
             DEBUG_MODE = options.HasOption("--debug");
             SOURCE_DIR = options.GetOption("--src");
             START_CLASS = options.HasOption("--startClass", true) ? options.GetOption("--startClass") : START_CLASS;
+
+            if (!SOURCE_DIR.EndsWith(Path.DirectorySeparatorChar) && !SOURCE_DIR.EndsWith(Path.AltDirectorySeparatorChar))
+                SOURCE_DIR += Path.DirectorySeparatorChar;
 
             if (DEBUG_MODE)
             {

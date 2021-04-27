@@ -19,11 +19,13 @@ namespace Marlin.Parsing
     public class MarlinParser
     {
         private readonly TokenStream stream;
+        private readonly string file;
         public List<CompilerWarning> warnings = new();
 
-        public MarlinParser(TokenStream stream)
+        public MarlinParser(TokenStream stream, string file)
         {
             this.stream = stream;
+            this.file = file;
         }
 
         private static bool IsBinaryOperator(TokenType type)
@@ -122,6 +124,7 @@ namespace Marlin.Parsing
                             source: Source.PARSER,
                             code: ErrorCode.EXPECTED_ROOT_MEMBER,
                             message: "Unexpected '" + stream.Peek().value + "', expected class or namespace",
+                            file: file,
                             rootCause: stream.Peek()
                         ));
                         stream.Next();
@@ -143,6 +146,7 @@ namespace Marlin.Parsing
                     source: Source.PARSER,
                     code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
                     message: "class name must be identifier",
+                    file: file,
                     rootCause: nameToken
                 ));
                 return null;
@@ -167,6 +171,7 @@ namespace Marlin.Parsing
                         source: Source.PARSER,
                         code: ErrorCode.EXPECTED_CLASS_MEMBER,
                         message: "expected function or '}', got " + stream.Peek().type,
+                        file: file,
                         rootCause: stream.Peek()
                     ));
                 } else
@@ -182,6 +187,7 @@ namespace Marlin.Parsing
                     source: Source.PARSER,
                     code: ErrorCode.EXPECTED_SCOPE,
                     message: "class must have a scope (curly brackets)",
+                    file: file,
                     rootCause: stream.Peek()
                 ));
                 return null;
@@ -202,6 +208,7 @@ namespace Marlin.Parsing
                     source: Source.PARSER,
                     code: ErrorCode.EXPECTED_CLASS_MEMBER,
                     message: "expected function, got " + token.type,
+                    file: file,
                     rootCause: token
                 ));
                 stream.Next();
@@ -220,6 +227,7 @@ namespace Marlin.Parsing
                     source: Source.PARSER,
                     code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
                     message: "function name must be identifier",
+                    file: file,
                     rootCause: nameToken
                 ));
                 return null;
@@ -241,6 +249,7 @@ namespace Marlin.Parsing
                             source: Source.PARSER,
                             code: ErrorCode.UNEXPECTED_EOF,
                             message: "unexpected EOF - unfinished argument list",
+                            file: file,
                             rootCause: stream.Peek()
                         ));
                         return null;
@@ -254,6 +263,7 @@ namespace Marlin.Parsing
                             source: Source.PARSER,
                             code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
                             message: "expected identifier for type, got " + argTypeToken.type,
+                            file: file,
                             rootCause: stream.Peek()
                         ));
                     }
@@ -265,6 +275,7 @@ namespace Marlin.Parsing
                             source: Source.PARSER,
                             code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
                             message: "expected identifier for name, got " + argNameToken.type,
+                            file: file,
                             rootCause: stream.Peek()
                         ));
                     }
@@ -280,6 +291,7 @@ namespace Marlin.Parsing
                                 source: Source.PARSER,
                                 code: ErrorCode.CANNOT_HAVE_PAREN_AFTER_COMMA_ARGLIST,
                                 message: "cannot have ')' after comma in argument list",
+                                file: file,
                                 rootCause: stream.Peek()
                             ));
                         }
@@ -298,6 +310,7 @@ namespace Marlin.Parsing
                             source: Source.PARSER,
                             code: ErrorCode.EXPECTED_COMMA_ARGLIST,
                             message: "expected comma",
+                            file: file,
                             rootCause: stream.Peek()
                         ));
                     }
@@ -316,6 +329,7 @@ namespace Marlin.Parsing
                             source: Source.PARSER,
                             code: ErrorCode.EXPECTED_PAREN_CLOSE_ARGLIST,
                             message: "expected ')' to close arguments list, got " + stream.Peek().type,
+                            file: file,
                             rootCause: stream.Peek()
                         ));
                     }
@@ -341,6 +355,7 @@ namespace Marlin.Parsing
                         source: Source.PARSER,
                         code: ErrorCode.EXPECTED_FUNCTION_MEMBER,
                         message: "expected statement or '}', got " + stream.Peek().type,
+                        file: file,
                         rootCause: stream.Peek()
                     ));
                 }
@@ -358,6 +373,7 @@ namespace Marlin.Parsing
                     source: Source.PARSER,
                     code: ErrorCode.EXPECTED_SCOPE,
                     message: "function must have a scope (curly brackets)",
+                    file: file,
                     rootCause: stream.Peek()
                 ));
                 return null;
@@ -385,6 +401,7 @@ namespace Marlin.Parsing
                         source: Source.PARSER,
                         code: ErrorCode.EXPECTED_STATEMENT,
                         message: "expected statement, got " + stream.Peek().type,
+                        file: file,
                         rootCause: stream.Peek()
                     ));
                     stream.Next();
@@ -417,6 +434,14 @@ namespace Marlin.Parsing
                     break;
                 case TokenType.SEMICOLON:
                     stream.Next();
+                    warnings.Add(new(
+                        level: Level.ERROR,
+                        source: Source.PARSER,
+                        code: ErrorCode.UNEXPECTED_SEMICOLON,
+                        message: "unexpected semicolon",
+                        file: file,
+                        rootCause: stream.Peek()
+                    ));
                     return null;
                 default:
                     warnings.Add(new(
@@ -424,11 +449,13 @@ namespace Marlin.Parsing
                         source: Source.PARSER,
                         code: ErrorCode.EXPECTED_EXPRESSION,
                         message: "expected variable, operator or literal, got " + stream.Peek().type,
+                        file: file,
                         rootCause: stream.Peek()
                     ));
                     stream.Next();
                     return null;
             }
+
             if (IsBinaryOperator(stream.Peek().type))
             {
                 return HandleOperatorRHS(0, n);
@@ -458,6 +485,7 @@ namespace Marlin.Parsing
                     source: Source.PARSER,
                     code: ErrorCode.EXPECTED_ANON_SCOPE_MEMBER,
                     message: "expected '}', got " + stream.Peek().type,
+                    file: file,
                     rootCause: stream.Peek()
                 ));
             }
@@ -476,6 +504,7 @@ namespace Marlin.Parsing
                     source: Source.PARSER,
                     code: ErrorCode.EXPECTED_PAREN_CLOSE_EXPR,
                     message: "expected ')' to close parenthesised expression, got " + stream.Peek().type,
+                    file: file,
                     rootCause: stream.Peek()
                 ));
             } else
@@ -509,6 +538,7 @@ namespace Marlin.Parsing
                                 source: Source.PARSER,
                                 code: ErrorCode.UNEXPECTED_EOF,
                                 message: "unexpected EOF - unfinished argument list",
+                                file: file,
                                 rootCause: stream.Peek()
                             ));
                             return null;
@@ -525,6 +555,7 @@ namespace Marlin.Parsing
                                     source: Source.PARSER,
                                     code: ErrorCode.CANNOT_HAVE_PAREN_AFTER_COMMA_ARGLIST,
                                     message: "cannot have ')' after comma in argument list",
+                                    file: file,
                                     rootCause: stream.Peek()
                                 ));
                             }
@@ -543,6 +574,7 @@ namespace Marlin.Parsing
                                 source: Source.PARSER,
                                 code: ErrorCode.EXPECTED_COMMA_ARGLIST,
                                 message: "expected comma",
+                                file: file,
                                 rootCause: stream.Peek()
                             ));
                         }
@@ -561,6 +593,7 @@ namespace Marlin.Parsing
                                 source: Source.PARSER,
                                 code: ErrorCode.EXPECTED_PAREN_CLOSE_ARGLIST,
                                 message: "expected ')' to close arguments list, got " + stream.Peek().type,
+                                file: file,
                                 rootCause: stream.Peek()
                             ));
                         }
@@ -578,6 +611,7 @@ namespace Marlin.Parsing
                             source: Source.PARSER,
                             code: ErrorCode.MISSING_SEMICOLON,
                             message: "missing semicolon",
+                            file: file,
                             rootCause: stream.Peek()
                         ));
                     }
@@ -604,6 +638,7 @@ namespace Marlin.Parsing
                             source: Source.PARSER,
                             code: ErrorCode.MISSING_SEMICOLON,
                             message: "missing semicolon",
+                            file: file,
                             rootCause: stream.Peek()
                         ));
                     }
@@ -617,6 +652,7 @@ namespace Marlin.Parsing
                     source: Source.PARSER,
                     code: ErrorCode.EXPECTED_FUNC_CALL_OR_VAR_ASSIGN,
                     message: "expected function call or variable assignment, got " + stream.Peek().type,
+                    file: file,
                     rootCause: stream.Peek()
                 ));
                 return null;
@@ -640,6 +676,7 @@ namespace Marlin.Parsing
                                 source: Source.PARSER,
                                 code: ErrorCode.UNEXPECTED_EOF,
                                 message: "unexpected EOF - unfinished argument list",
+                                file: file,
                                 rootCause: stream.Peek()
                             ));
                             return null;
@@ -656,6 +693,7 @@ namespace Marlin.Parsing
                                     source: Source.PARSER,
                                     code: ErrorCode.CANNOT_HAVE_PAREN_AFTER_COMMA_ARGLIST,
                                     message: "cannot have ')' after comma in argument list",
+                                    file: file,
                                     rootCause: stream.Peek()
                                 ));
                             }
@@ -673,6 +711,7 @@ namespace Marlin.Parsing
                                 source: Source.PARSER,
                                 code: ErrorCode.EXPECTED_COMMA_ARGLIST,
                                 message: "expected comma",
+                                file: file,
                                 rootCause: stream.Peek()
                             ));
                         }
@@ -691,6 +730,7 @@ namespace Marlin.Parsing
                                 source: Source.PARSER,
                                 code: ErrorCode.EXPECTED_PAREN_CLOSE_ARGLIST,
                                 message: "expected ')' to close arguments list, got " + stream.Peek().type,
+                                file: file,
                                 rootCause: stream.Peek()
                             ));
                         }
@@ -778,6 +818,7 @@ namespace Marlin.Parsing
                         source: Source.PARSER,
                         code: ErrorCode.MISSING_OPERATOR_RIGHT,
                         message: "expected something to the right of '" + binOp.value + "'",
+                        file: file,
                         rootCause: stream.Peek()
                     ));
                     return null;

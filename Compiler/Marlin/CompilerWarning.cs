@@ -54,14 +54,16 @@ namespace Marlin
         public Source WarningSource { get; private set; }
         public string Code { get; private set; }
         public string Message { get; private set; }
+        public string File { get; private set; }
         public Token RootCause { get; private set; }
 
-        public CompilerWarning(Level level, Source source, string code, string message, Token rootCause)
+        public CompilerWarning(Level level, Source source, string code, string message, string file, Token rootCause)
         {
             WarningLevel = level;
             WarningSource = source;
             Code = code;
             Message = message;
+            File = file;
             RootCause = rootCause;
         }
     }
