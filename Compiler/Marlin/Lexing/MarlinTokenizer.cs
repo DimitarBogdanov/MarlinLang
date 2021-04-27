@@ -8,6 +8,7 @@
  * https://creativecommons.org/licenses/by-nd/3.0/
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using static Marlin.CompilerWarning;
@@ -19,6 +20,7 @@ namespace Marlin.Lexing
         private readonly string path;
         private readonly TokenStream tokens;
         public List<CompilerWarning> errors = new();
+        public static long totalTokenizationTime = 0;
 
         public MarlinTokenizer(string path)
         {
@@ -28,6 +30,8 @@ namespace Marlin.Lexing
 
         public TokenStream Tokenize()
         {
+            long start = Program.CurrentTimeMillis();
+
             bool inIdentifier = false;
             bool inString = false;
             bool inInteger = false;
@@ -452,6 +456,8 @@ namespace Marlin.Lexing
             }
 
             tokens.Add(new(TokenType.EOF, "<EOF>", line, col));
+
+            totalTokenizationTime += (Program.CurrentTimeMillis() - start);
 
             return tokens;
         }

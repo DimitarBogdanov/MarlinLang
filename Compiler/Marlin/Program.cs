@@ -23,6 +23,7 @@ namespace Marlin
         public const string MARLIN_VERSION = "0.1";
 
         public static bool DEBUG_MODE { get; private set; } = false;
+        public static bool CREATE_FILE_TREE_GRAPHS { get; private set; } = false;
         public static string SOURCE_DIR { get; private set; } = "";
         public static string START_CLASS { get; private set; } = "Main";
 
@@ -33,16 +34,33 @@ namespace Marlin
             MarlinProgramBuilder.Build();
         }
 
-        public static void GenerateImage(Node root)
+        public static long CurrentTimeMillis()
+        {
+            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+
+        public static void GenerateImage(Node root, string path)
         {
             TreeData.TreeDataTableDataTable table = new();
             AddChildrenRecursively(root, null, table);
             TreeBuilder builder = new(table)
             {
                 BoxHeight = 45,
-                BoxWidth = 160,
+                BoxWidth = 170,
             };
-            Image.FromStream(builder.GenerateTree("__ROOT__", ImageFormat.Png)).Save(Path.Combine(SOURCE_DIR, "compiler_source_tree.png"));
+            Image.FromStream(builder.GenerateTree("__ROOT__", ImageFormat.Png)).Save(path);
+        }
+
+        public static void DeleteImageIfExists(string path)
+        {
+            if (!path.EndsWith(".mar.png") || !path.StartsWith(SOURCE_DIR))
+                return;
+
+            try
+            {
+                File.Delete(path);
+            }
+            catch (Exception) { }
         }
 
         private static void AddChildrenRecursively(Node node, Node parent, TreeData.TreeDataTableDataTable table)
@@ -74,6 +92,7 @@ namespace Marlin
             }
 
             DEBUG_MODE = options.HasOption("--debug");
+            CREATE_FILE_TREE_GRAPHS = options.HasOption("--treeGraphs");
             SOURCE_DIR = options.GetOption("--src");
             START_CLASS = options.HasOption("--startClass", true) ? options.GetOption("--startClass") : START_CLASS;
 

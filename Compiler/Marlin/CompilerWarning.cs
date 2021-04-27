@@ -48,6 +48,8 @@ namespace Marlin
             public const string EXPECTED_PAREN_CLOSE_EXPR = "MAR0018";
             public const string SYMBOL_ALREADY_EXISTS = "MAR0019";
             public const string UNKNOWN_SYMBOL = "MAR0020";
+            public const string EXPECTED_SET_SEMICOLON_DECLARE_VAR = "MAR0021";
+            public const string EXPECTED_IDENTIFIER_IN_TYPE_NAME = "MAR0022";
         }
 
         public Level WarningLevel { get; private set; }

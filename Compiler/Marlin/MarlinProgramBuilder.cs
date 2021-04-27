@@ -16,13 +16,13 @@ namespace Marlin
 
         public static void Build()
         {
-            long startTime = Environment.TickCount64;
+            long startTime = Program.CurrentTimeMillis();
             
             Console.WriteLine("Building " + Program.SOURCE_DIR + " ...");
             BuildDirectory(Program.SOURCE_DIR);
             Console.WriteLine();
 
-            long endTime = Environment.TickCount64;
+            long endTime = Program.CurrentTimeMillis();
 
             // Log messages/warns/errors
             ConsoleColor previousColor = Console.ForegroundColor;
@@ -48,13 +48,24 @@ namespace Marlin
             // Build status
             if (allWarnings.Count != 0)
                 Console.WriteLine();
-            Console.WriteLine($"Build completed in {(endTime - startTime) / 1000}.{(endTime - startTime) % 1000} sec: " + (buildFailed ? "FAILED" : "SUCCESSFUL"));
+            Console.WriteLine($"Build completed in {((endTime - startTime) / 1000.0).ToString().Replace(',', '.')} sec: " + (buildFailed ? "FAILED" : "SUCCESSFUL"));
+            if (Program.DEBUG_MODE)
+            {
+                Console.WriteLine("    Of which...");
+                Console.WriteLine("    Lexing: " + MarlinTokenizer.totalTokenizationTime + " ms");
+                Console.WriteLine("    Parsing: " + MarlinParser.totalParseTime + " ms");
+                Console.WriteLine("    Semantic analysis:");
+                Console.WriteLine("        Pass 1: " + MarlinSemanticAnalyser.passOneTookMs + " ms");
+                Console.WriteLine("        Pass 2: " + MarlinSemanticAnalyser.passTwoTookMs + " ms");
+            }
         }
         
         private static void BuildDirectory(string path)
         {
             foreach (string childPath in Directory.EnumerateFileSystemEntries(path))
             {
+                if (!File.Exists(childPath)) continue;
+
                 FileAttributes attributes = File.GetAttributes(childPath);
                 if (attributes.HasFlag(FileAttributes.Directory))
                     BuildDirectory(childPath);
@@ -88,7 +99,7 @@ namespace Marlin
                 if (!parser.warnings.Any(x => x.WarningLevel == Level.ERROR))
                 {
                     // No parser errors
-                    MarlinSemanticAnalyser analyser = new(rootNode);
+                    MarlinSemanticAnalyser analyser = new(rootNode, path);
                     analyser.Analyse();
                     allWarnings.AddRange(analyser.warnings);
 
@@ -96,18 +107,23 @@ namespace Marlin
                     {
                         // No analyser errors
                         // TODO
-                        
+                        if (Program.CREATE_FILE_TREE_GRAPHS)
+                        {
+                            Program.GenerateImage(rootNode, path + ".png");
+                        }
                     }
                     else
                     {
                         // Analyser had errors
                         buildFailed = true;
+                        Program.DeleteImageIfExists(path + ".png"); 
                         return;
                     }
                 } else
                 {
                     // Parser had errors
                     buildFailed = true;
+                    Program.DeleteImageIfExists(path + ".png");
                     return;
                 }
             }
@@ -115,6 +131,7 @@ namespace Marlin
             {
                 // Tokenizer had errors
                 buildFailed = true;
+                Program.DeleteImageIfExists(path + ".png");
                 return;
             }
         }

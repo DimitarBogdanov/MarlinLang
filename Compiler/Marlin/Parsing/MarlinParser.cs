@@ -21,6 +21,7 @@ namespace Marlin.Parsing
         private readonly TokenStream stream;
         private readonly string file;
         public List<CompilerWarning> warnings = new();
+        public static long totalParseTime = 0;
 
         public MarlinParser(TokenStream stream, string file)
         {
@@ -88,6 +89,7 @@ namespace Marlin.Parsing
 
         public Node Parse()
         {
+            long start = Program.CurrentTimeMillis();
             Node rootNode = new(null, "__ROOT__");
 
             while (stream.HasNext() && stream.Peek().type != TokenType.EOF)
@@ -100,6 +102,7 @@ namespace Marlin.Parsing
                     rootNode.AddChild(scope);
             }
 
+            totalParseTime += (Program.CurrentTimeMillis() - start);
             return rootNode;
         }
 
@@ -219,6 +222,40 @@ namespace Marlin.Parsing
         private Node ExpectFunction()
         {
             stream.Next(); // consume 'func'
+            Token typeToken = stream.Next();
+            if (typeToken.type != TokenType.IDENTIFIER)
+            {
+                warnings.Add(new(
+                    level: Level.ERROR,
+                    source: Source.PARSER,
+                    code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
+                    message: "function type must be identifier",
+                    file: file,
+                    rootCause: typeToken
+                ));
+                return null;
+            }
+
+            while (stream.Peek().type == TokenType.DOT)
+            {
+                stream.Next(); // consume dot
+                Token nextToken = stream.Next();
+                if (nextToken.type == TokenType.IDENTIFIER)
+                {
+                    typeToken = new Token(TokenType.IDENTIFIER, typeToken.value + "." + nextToken.value, typeToken.line, typeToken.col);
+                } else
+                {
+                    warnings.Add(new(
+                        level: Level.ERROR,
+                        source: Source.PARSER,
+                        code: ErrorCode.EXPECTED_IDENTIFIER_IN_TYPE_NAME,
+                        message: "expected identifier in nested type name, got " + nextToken.type,
+                        file: file,
+                        rootCause: nextToken
+                    ));
+                }
+            }
+
             Token nameToken = stream.Next();
             if (nameToken.type != TokenType.IDENTIFIER)
             {
@@ -226,7 +263,7 @@ namespace Marlin.Parsing
                     level: Level.ERROR,
                     source: Source.PARSER,
                     code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
-                    message: "function name must be identifier",
+                    message: "function name must be identifier, got " + nameToken.type,
                     file: file,
                     rootCause: nameToken
                 ));
@@ -234,7 +271,7 @@ namespace Marlin.Parsing
             }
 
             // Collect arguments
-            List<KeyValuePair<VarNode, VarNode>> args = new();
+            List<KeyValuePair<NameReferenceNode, NameReferenceNode>> args = new();
             // Opening paren
             if (stream.Peek().type == TokenType.PAREN_LEFT)
             {
@@ -280,7 +317,7 @@ namespace Marlin.Parsing
                         ));
                     }
 
-                    args.Add(new(new VarNode(argTypeToken.value, argTypeToken), new VarNode(argNameToken.value, argNameToken)));
+                    args.Add(new(new NameReferenceNode(argTypeToken.value, argTypeToken), new NameReferenceNode(argNameToken.value, argNameToken)));
 
                     if (stream.Peek().type == TokenType.COMMA)
                     {
@@ -341,7 +378,7 @@ namespace Marlin.Parsing
             {
                 stream.Next(); // consume '{'
 
-                FuncNode funcNode = new(nameToken.value, args, nameToken);
+                FuncNode funcNode = new(nameToken.value, typeToken.value, args, nameToken);
 
                 while (stream.Peek().type != TokenType.BRACE_RIGHT && stream.Peek().type != TokenType.EOF)
                 {
@@ -519,7 +556,7 @@ namespace Marlin.Parsing
             Token identifier = stream.Next();
             if (isStatement)
             {
-                // Acceptable: function call, variable assignment
+                // Acceptable: function call, variable declaration and assignment
 
                 // Function call
                 if (stream.Peek().type == TokenType.PAREN_LEFT)
@@ -617,6 +654,91 @@ namespace Marlin.Parsing
                     }
 
                     return new FuncCallNode(identifier.value, args, identifier);
+                }
+
+                // Variable declaration
+                if (stream.Peek().type == TokenType.DOT || stream.Peek().type == TokenType.IDENTIFIER)
+                {
+                    while (stream.Peek().type == TokenType.DOT)
+                    {
+                        stream.Next(); // consume dot
+                        Token nextToken = stream.Next();
+                        if (nextToken.type == TokenType.IDENTIFIER)
+                        {
+                            identifier = new Token(TokenType.IDENTIFIER, identifier.value + "." + nextToken.value, identifier.line, identifier.col);
+                        }
+                        else
+                        {
+                            warnings.Add(new(
+                                level: Level.ERROR,
+                                source: Source.PARSER,
+                                code: ErrorCode.EXPECTED_IDENTIFIER_IN_TYPE_NAME,
+                                message: "expected identifier in nested type name, got " + nextToken.type,
+                                file: file,
+                                rootCause: nextToken
+                            ));
+                        }
+                    }
+
+                    if (stream.Peek().type == TokenType.IDENTIFIER)
+                    {
+                        Token nameToken = stream.Next();
+                    
+                        if (stream.Peek().type == TokenType.SET)
+                        {
+                            stream.Next(); // consume '='
+                        }
+                        else if (stream.Peek().type == TokenType.SEMICOLON)
+                        {
+                            stream.Next(); // comesume ';'
+                            return new VarDeclareNode(identifier.value, nameToken.value, null, identifier);
+                        }
+                        else
+                        {
+                            warnings.Add(new(
+                                level: Level.ERROR,
+                                source: Source.PARSER,
+                                code: ErrorCode.EXPECTED_SET_SEMICOLON_DECLARE_VAR,
+                                message: "expected value or semicolon, got " + stream.Peek(),
+                                file: file,
+                                rootCause: stream.Peek()
+                            ));
+                            return new VarDeclareNode(identifier.value, nameToken.value, null, identifier);
+                        }
+
+                        Node value = ExpectExpression();
+
+                        // We want a semicolon here
+                        if (stream.Peek().type == TokenType.SEMICOLON)
+                        {
+                            stream.Next();
+                        }
+                        else
+                        {
+                            warnings.Add(new(
+                                level: Level.ERROR,
+                                source: Source.PARSER,
+                                code: ErrorCode.MISSING_SEMICOLON,
+                                message: "missing semicolon",
+                                file: file,
+                                rootCause: stream.Peek()
+                            ));
+                        }
+
+                        return new VarDeclareNode(identifier.value, nameToken.value, value, identifier);
+                    }
+                    else
+                    {
+                        // Got nested type but no identifier?????
+                        warnings.Add(new(
+                            level: Level.ERROR,
+                            source: Source.PARSER,
+                            code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
+                            message: "variable name must be identifier, got " + stream.Peek().type,
+                            file: file,
+                            rootCause: stream.Peek()
+                        ));
+                    }
                 }
 
                 // Variable assignment
@@ -740,7 +862,7 @@ namespace Marlin.Parsing
                 }
 
                 // Variable reference
-                return new VarNode(identifier.value, identifier);
+                return new NameReferenceNode(identifier.value, identifier);
             }
         }
 

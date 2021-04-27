@@ -21,9 +21,9 @@ namespace Marlin.Parsing
         FUNCTION,
         FUNCTION_CALL,
         CLASS_TEMPLATE,
-        TYPE_REFERENCE,
         VARIABLE_ASSIGNMENT,
-        VARIABLE_REFERENCE,
+        VARIABLE_DECLARATION,
+        NAME_REFERENCE,
         NUMBER_INT,
         NUMBER_DBL,
         STRING,
@@ -60,6 +60,11 @@ namespace Marlin.Parsing
         {
             return "";
         }
+
+        public virtual void Accept(IVisitor visitor)
+        {
+            return;
+        }
     }
 
     public class BinaryOperatorNode : Node
@@ -84,6 +89,11 @@ namespace Marlin.Parsing
         {
             return Value;
         }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitBinaryOperator(this);
+        }
     }
 
     public class ClassTemplateNode : Node
@@ -101,16 +111,23 @@ namespace Marlin.Parsing
         {
             return "ClassTemplate<" + Name + ">";
         }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitClassTemplate(this);
+        }
     }
 
     public class FuncNode : Node
     {
         public string Name { get; private set; }
-        public List<KeyValuePair<VarNode, VarNode>> Args { get; private set; }
+        public string FuncType { get; private set; }
+        public List<KeyValuePair<NameReferenceNode, NameReferenceNode>> Args { get; private set; }
 
-        public FuncNode(string name, List<KeyValuePair<VarNode, VarNode>> args, Token token) : base(token)
+        public FuncNode(string name, string type, List<KeyValuePair<NameReferenceNode, NameReferenceNode>> args, Token token) : base(token)
         {
             Name = name;
+            FuncType = type;
             Args = args;
 
             Type = NodeType.FUNCTION;
@@ -119,6 +136,11 @@ namespace Marlin.Parsing
         public override string ToString()
         {
             return "Func<" + Name + ">\n" + Args.Count + " arg(s)";
+        }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitFunc(this);
         }
     }
 
@@ -138,22 +160,59 @@ namespace Marlin.Parsing
         {
             return "Call<" + Name + ">\n" + Children.Count + " arg(s)";
         }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitFuncCall(this);
+        }
     }
 
-    public class VarNode : Node
+    public class NameReferenceNode : Node
     {
         public string Name { get; private set; }
 
-        public VarNode(string name, Token token) : base(token)
+        public NameReferenceNode(string name, Token token) : base(token)
         {
             Name = name;
 
-            Type = NodeType.VARIABLE_REFERENCE;
+            Type = NodeType.NAME_REFERENCE;
         }
 
         public override string ToString()
         {
             return "VarRef<" + Name + ">";
+        }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitNameReference(this);
+        }
+    }
+
+    public class VarDeclareNode : Node
+    {
+        public string VarType { get; private set; }
+        public string Name { get; private set; }
+        public Node Value { get; private set; }
+
+        public VarDeclareNode(string type, string name, Node value, Token token) : base(token)
+        {
+            VarType = type;
+            Name = name;
+            Value = value;
+            Children.Add(value);
+
+            Type = NodeType.VARIABLE_DECLARATION;
+        }
+
+        public override string ToString()
+        {
+            return "VarAssign<" + Name + ">";
+        }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitVarDeclare(this);
         }
     }
 
@@ -175,6 +234,11 @@ namespace Marlin.Parsing
         {
             return "VarAssign<" + Name + ">";
         }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitVarAssign(this);
+        }
     }
 
     public class StringNode : Node
@@ -191,6 +255,11 @@ namespace Marlin.Parsing
         public override string ToString()
         {
             return "\"" + Value.ToString() + "\"";
+        }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitString(this);
         }
     }
 
@@ -209,6 +278,11 @@ namespace Marlin.Parsing
         {
             return Value.ToString().ToLower();
         }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitBoolean(this);
+        }
     }
 
     public class NumberIntegerNode : Node
@@ -226,6 +300,11 @@ namespace Marlin.Parsing
         {
             return Value.ToString();
         }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitInteger(this);
+        }
     }
 
     public class NumberDoubleNode : Node
@@ -242,6 +321,11 @@ namespace Marlin.Parsing
         public override string ToString()
         {
             return Value.ToString().Replace(',', '.');
+        }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitDouble(this);
         }
     }
 }
