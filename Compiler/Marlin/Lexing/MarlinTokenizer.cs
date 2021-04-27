@@ -246,6 +246,48 @@ namespace Marlin.Lexing
                             tokens.Add(new(TokenType.SEMICOLON, ";", line, col));
                             continue;
 
+                        case '&':
+                            {
+                                if (reader.Peek() == '&')
+                                {
+                                    reader.Read();
+                                    tokens.Add(new(TokenType.AND, "&&", line, col));
+                                    continue;
+                                } else
+                                {
+                                    errors.Add(new(
+                                        level: Level.ERROR,
+                                        source: Source.LEXER,
+                                        code: ErrorCode.UNKNOWN_TOKEN,
+                                        message: "Unknown token '&'",
+                                        rootCause: new Token(TokenType.UNKNOWN, currentChar.ToString(), line, col)
+                                    ));
+                                    tokens.Add(new(TokenType.UNKNOWN, currentChar.ToString(), line, col));
+                                    continue;
+                                }
+                            }
+
+                        case '|':
+                            {
+                                if (reader.Peek() == '|')
+                                {
+                                    reader.Read();
+                                    tokens.Add(new(TokenType.OR, "&&", line, col));
+                                    continue;
+                                } else
+                                {
+                                    errors.Add(new(
+                                        level: Level.ERROR,
+                                        source: Source.LEXER,
+                                        code: ErrorCode.UNKNOWN_TOKEN,
+                                        message: "Unknown token '|'",
+                                        rootCause: new Token(TokenType.UNKNOWN, currentChar.ToString(), line, col)
+                                    ));
+                                    tokens.Add(new(TokenType.UNKNOWN, currentChar.ToString(), line, col));
+                                    continue;
+                                }
+                            }
+
                         case '!':
                             {
                                 if (reader.Peek() == '=')
@@ -416,9 +458,6 @@ namespace Marlin.Lexing
             {
                 "true"       =>  TokenType.BOOLEAN,
                 "false"      =>  TokenType.BOOLEAN,
-                
-                "and"        =>  TokenType.AND,
-                "or"         =>  TokenType.OR,
                 
                 "class"      =>  TokenType.CLASS,
                 "func"       =>  TokenType.FUNCTION,

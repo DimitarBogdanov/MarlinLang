@@ -11,6 +11,7 @@
 using Marlin.Lexing;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using static Marlin.CompilerWarning;
 
 namespace Marlin.Parsing
@@ -85,24 +86,16 @@ namespace Marlin.Parsing
 
         public Node Parse()
         {
-            Node rootNode = new("__ROOT__");
+            Node rootNode = new(null, "__ROOT__");
 
-            while (stream.HasNext())
+            while (stream.HasNext() && stream.Peek().type != TokenType.EOF)
             {
-                try
-                {
-                    if (stream.Peek().type == TokenType.EOF)
-                        return rootNode;
-
-                    Node scope = ExpectNewScope();
-                    if (scope != null)
-                        rootNode.AddChild(scope);
-                }
-                catch (Exception)
-                {
-                    // File ended
+                if (stream.Peek().type == TokenType.EOF)
                     return rootNode;
-                }
+
+                Node scope = ExpectNewScope();
+                if (scope != null)
+                    rootNode.AddChild(scope);
             }
 
             return rootNode;
@@ -160,7 +153,7 @@ namespace Marlin.Parsing
             {
                 stream.Next(); // consume '{'
 
-                ClassTemplateNode templateNode = new(nameToken.value);
+                ClassTemplateNode templateNode = new(nameToken.value, nameToken);
 
                 while (stream.Peek().type != TokenType.BRACE_RIGHT && stream.Peek().type != TokenType.EOF)
                 {
@@ -276,7 +269,7 @@ namespace Marlin.Parsing
                         ));
                     }
 
-                    args.Add(new(new VarNode(argTypeToken.value), new VarNode(argNameToken.value)));
+                    args.Add(new(new VarNode(argTypeToken.value, argTypeToken), new VarNode(argNameToken.value, argNameToken)));
 
                     if (stream.Peek().type == TokenType.COMMA)
                     {
@@ -334,7 +327,7 @@ namespace Marlin.Parsing
             {
                 stream.Next(); // consume '{'
 
-                FuncNode funcNode = new(nameToken.value, args);
+                FuncNode funcNode = new(nameToken.value, args, nameToken);
 
                 while (stream.Peek().type != TokenType.BRACE_RIGHT && stream.Peek().type != TokenType.EOF)
                 {
@@ -413,6 +406,15 @@ namespace Marlin.Parsing
                 case TokenType.DECIMAL:
                     n = ExpectDecimal();
                     break;
+                case TokenType.STRING:
+                    n = ExpectString();
+                    break;
+                case TokenType.BOOLEAN:
+                    n = ExpectBoolean();
+                    break;
+                case TokenType.PAREN_LEFT:
+                    n = ExpectParenExpression();
+                    break;
                 case TokenType.SEMICOLON:
                     stream.Next();
                     return null;
@@ -421,7 +423,7 @@ namespace Marlin.Parsing
                         level: Level.ERROR,
                         source: Source.PARSER,
                         code: ErrorCode.EXPECTED_EXPRESSION,
-                        message: "expected variable or number, got " + stream.Peek().type,
+                        message: "expected variable, operator or literal, got " + stream.Peek().type,
                         rootCause: stream.Peek()
                     ));
                     stream.Next();
@@ -439,8 +441,8 @@ namespace Marlin.Parsing
 
         private Node ExpectAnonymousScope()
         {
-            stream.Next(); // consume '{'
-            Node n = new();
+            // consume '{'
+            Node n = new(stream.Next());
             while (stream.Peek().type != TokenType.BRACE_RIGHT && stream.Peek().type != TokenType.EOF)
             {
                 n.AddChild(ExpectStatement());
@@ -461,6 +463,26 @@ namespace Marlin.Parsing
             }
 
             return n;
+        }
+
+        private Node ExpectParenExpression()
+        {
+            stream.Next(); // consume '('
+            Node result = ExpectExpression();
+            if (stream.Peek().type != TokenType.PAREN_RIGHT)
+            {
+                warnings.Add(new(
+                    level: Level.ERROR,
+                    source: Source.PARSER,
+                    code: ErrorCode.EXPECTED_PAREN_CLOSE_EXPR,
+                    message: "expected ')' to close parenthesised expression, got " + stream.Peek().type,
+                    rootCause: stream.Peek()
+                ));
+            } else
+            {
+                stream.Next(); // comsume ')'
+            }
+            return result;
         }
 
         private Node ExpectIdentifier(bool isStatement)
@@ -560,7 +582,7 @@ namespace Marlin.Parsing
                         ));
                     }
 
-                    return new FuncCallNode(identifier.value, args);
+                    return new FuncCallNode(identifier.value, args, identifier);
                 }
 
                 // Variable assignment
@@ -586,7 +608,7 @@ namespace Marlin.Parsing
                         ));
                     }
 
-                    return new VarAssignNode(identifier.value, value);
+                    return new VarAssignNode(identifier.value, value, identifier);
                 }
 
                 // We haven't returned yet! This is not supported
@@ -674,24 +696,11 @@ namespace Marlin.Parsing
                         }
                     }
 
-                    // We DON'T want a semicolon here
-                    if (stream.Peek().type == TokenType.SEMICOLON)
-                    {
-                        warnings.Add(new(
-                            level: Level.ERROR,
-                            source: Source.PARSER,
-                            code: ErrorCode.UNEXPECTED_SEMICOLON,
-                            message: "unexpected semicolon",
-                            rootCause: stream.Peek()
-                        ));
-                        stream.Next();
-                    }
-
-                    return new FuncCallNode(identifier.value, args);
+                    return new FuncCallNode(identifier.value, args, identifier);
                 }
 
                 // Variable reference
-                return new VarNode(identifier.value);
+                return new VarNode(identifier.value, identifier);
             }
         }
 
@@ -700,7 +709,7 @@ namespace Marlin.Parsing
             Token integer = stream.Next();
             if (integer.type == TokenType.INTEGER)
             {
-                return new NumberIntegerNode(int.Parse(integer.value));
+                return new NumberIntegerNode(int.Parse(integer.value), integer);
             } else
             {
                 throw new Exception("Can't create int");
@@ -712,10 +721,36 @@ namespace Marlin.Parsing
             Token dbl = stream.Next();
             if (dbl.type == TokenType.DECIMAL)
             {
-                return new NumberDoubleNode(double.Parse(dbl.value));
+                return new NumberDoubleNode(double.Parse(dbl.value, CultureInfo.InvariantCulture), dbl);
             } else
             {
                 throw new Exception("Can't create double");
+            }
+        }
+
+        private Node ExpectString()
+        {
+            Token str = stream.Next();
+            if (str.type == TokenType.STRING)
+            {
+                return new StringNode(str.value, str);
+            }
+            else
+            {
+                throw new Exception("Can't create string");
+            }
+        }
+
+        private Node ExpectBoolean()
+        {
+            Token bln = stream.Next();
+            if (bln.type == TokenType.BOOLEAN)
+            {
+                return new BooleanNode(bln.value == "true", bln);
+            }
+            else
+            {
+                throw new Exception("Can't create string");
             }
         }
 
@@ -760,7 +795,7 @@ namespace Marlin.Parsing
                     }
                 }
 
-                left = new BinaryOperatorNode(binOp.value, left, right);
+                left = new BinaryOperatorNode(binOp.value, left, right, binOp);
             }
         }
     }

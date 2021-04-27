@@ -122,7 +122,7 @@ namespace Marlin
                     Console.WriteLine("Build FAILED");
                     return;
                 }
-            } else
+            } else if (DEBUG_MODE)
             {
                 Console.WriteLine("No errors, warnings or messages");
             }
@@ -131,6 +131,11 @@ namespace Marlin
             Console.WriteLine("Build SUCCEEDED");
 
             GenerateImage(rootNode);
+        }
+
+        public static void Build()
+        {
+
         }
 
         public static void GenerateImage(Node root)
@@ -176,8 +181,6 @@ namespace Marlin
             DEBUG_MODE = options.HasOption("--debug");
             SOURCE_DIR = options.GetOption("--src");
             START_CLASS = options.HasOption("--startClass", true) ? options.GetOption("--startClass") : START_CLASS;
-
-            Console.WriteLine(START_CLASS + $", {options.HasOption("--startClass")} {options.GetOption("--startClass")}");
 
             if (DEBUG_MODE)
             {

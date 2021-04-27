@@ -8,6 +8,7 @@
  * https://creativecommons.org/licenses/by-nd/3.0/
  */
 
+using Marlin.Lexing;
 using System;
 using System.Collections.Generic;
 
@@ -25,6 +26,8 @@ namespace Marlin.Parsing
         VARIABLE_REFERENCE,
         NUMBER_INT,
         NUMBER_DBL,
+        STRING,
+        BOOLEAN
     }
 
     public class Node
@@ -33,12 +36,14 @@ namespace Marlin.Parsing
         public Node Parent { get; set; } = null;
         public List<Node> Children { get; set; } = new();
         public NodeType Type { get; set; } = NodeType.BLOCK;
+        public Token Token { get; set; } = null;
 
-        public Node(string id = "")
+        public Node(Token token, string id = "")
         {
             if (id == "")
                 id = Guid.NewGuid().ToString();
 
+            Token = token;
             Id = id;
         }
 
@@ -63,7 +68,7 @@ namespace Marlin.Parsing
         public Node Left { get; private set; }
         public Node Right { get; private set; }
 
-        public BinaryOperatorNode(string value, Node left, Node right)
+        public BinaryOperatorNode(string value, Node left, Node right, Token token) : base(token)
         {
             Value = value;
             Left = left;
@@ -85,7 +90,7 @@ namespace Marlin.Parsing
     {
         public string Name { get; private set; }
 
-        public ClassTemplateNode(string name)
+        public ClassTemplateNode(string name, Token token) : base(token)
         {
             Name = name;
 
@@ -103,7 +108,7 @@ namespace Marlin.Parsing
         public string Name { get; private set; }
         public List<KeyValuePair<VarNode, VarNode>> Args { get; private set; }
 
-        public FuncNode(string name, List<KeyValuePair<VarNode, VarNode>> args)
+        public FuncNode(string name, List<KeyValuePair<VarNode, VarNode>> args, Token token) : base(token)
         {
             Name = name;
             Args = args;
@@ -121,7 +126,7 @@ namespace Marlin.Parsing
     {
         public string Name { get; private set; }
 
-        public FuncCallNode(string name, List<Node> args)
+        public FuncCallNode(string name, List<Node> args, Token token) : base(token)
         {
             Name = name;
             Children = args;
@@ -139,7 +144,7 @@ namespace Marlin.Parsing
     {
         public string Name { get; private set; }
 
-        public VarNode(string name)
+        public VarNode(string name, Token token) : base(token)
         {
             Name = name;
 
@@ -157,7 +162,7 @@ namespace Marlin.Parsing
         public string Name { get; private set; }
         public Node Value { get; private set; }
 
-        public VarAssignNode(string name, Node value)
+        public VarAssignNode(string name, Node value, Token token) : base(token)
         {
             Name = name;
             Value = value;
@@ -172,12 +177,45 @@ namespace Marlin.Parsing
         }
     }
 
-    #region Numbers
+    public class StringNode : Node
+    {
+        public string Value { get; private set; }
+
+        public StringNode(string value, Token token) : base(token)
+        {
+            Value = value;
+
+            Type = NodeType.STRING;
+        }
+
+        public override string ToString()
+        {
+            return "\"" + Value.ToString() + "\"";
+        }
+    }
+
+    public class BooleanNode : Node
+    {
+        public bool Value { get; private set; }
+
+        public BooleanNode(bool value, Token token) : base(token)
+        {
+            Value = value;
+
+            Type = NodeType.BOOLEAN;
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString().ToLower();
+        }
+    }
+
     public class NumberIntegerNode : Node
     {
         public int Value { get; private set; }
 
-        public NumberIntegerNode(int value)
+        public NumberIntegerNode(int value, Token token) : base(token)
         {
             Value = value;
 
@@ -194,7 +232,7 @@ namespace Marlin.Parsing
     {
         public double Value { get; private set; }
 
-        public NumberDoubleNode(double value)
+        public NumberDoubleNode(double value, Token token) : base(token)
         {
             Value = value;
 
@@ -203,8 +241,7 @@ namespace Marlin.Parsing
 
         public override string ToString()
         {
-            return Value.ToString();
+            return Value.ToString().Replace(',', '.');
         }
     }
-    #endregion Numbers
 }

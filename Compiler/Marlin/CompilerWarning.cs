@@ -23,7 +23,8 @@ namespace Marlin
         public enum Source
         {
             LEXER,
-            PARSER
+            PARSER,
+            SEMANTIC_ANALYSIS
         }
         public class ErrorCode
         {
@@ -44,6 +45,9 @@ namespace Marlin
             public const string EXPECTED_FUNC_CALL_OR_VAR_ASSIGN = "MAR0015";
             public const string UNEXPECTED_SEMICOLON = "MAR0016";
             public const string MISSING_OPERATOR_RIGHT = "MAR0017";
+            public const string EXPECTED_PAREN_CLOSE_EXPR = "MAR0018";
+            public const string SYMBOL_ALREADY_EXISTS = "MAR0019";
+            public const string UNKNOWN_SYMBOL = "MAR0020";
         }
 
         public Level WarningLevel { get; private set; }
@@ -54,11 +58,6 @@ namespace Marlin
 
         public CompilerWarning(Level level, Source source, string code, string message, Token rootCause)
         {
-            if (source == Source.LEXER && level != Level.ERROR)
-            {
-                throw new System.Exception("lexer returned a " + level.ToString());
-            }
-
             WarningLevel = level;
             WarningSource = source;
             Code = code;
