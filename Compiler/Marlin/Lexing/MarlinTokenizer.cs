@@ -14,7 +14,7 @@ using static Marlin.CompilerWarning;
 
 namespace Marlin.Lexing
 {
-    public class MarlinTokenizer : IMarlinTokenizer
+    public class MarlinTokenizer
     {
         private readonly string path;
         private readonly TokenStream tokens;

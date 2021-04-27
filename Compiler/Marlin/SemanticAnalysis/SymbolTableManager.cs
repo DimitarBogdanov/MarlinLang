@@ -16,8 +16,8 @@ namespace Marlin.SemanticAnalysis
 {
     public class SymbolTableManager
     {
-        private Dictionary<string, SymbolData> symbols = new();
-        public List<CompilerWarning> warnings = new();
+        private readonly Dictionary<string, SymbolData> symbols = new();
+        public readonly List<CompilerWarning> warnings = new();
 
         public void AddSymbol(string id, SymbolData data, Node nodeReference)
         {
