@@ -39,9 +39,7 @@ namespace Marlin.SemanticAnalysis
         // Semantic work
         // Pass 1: identify all symbols from all files
         //         fill symbol table with keys and types for variables
-        // Pass 2: identify all symbol USAGES from all files,
-        //         fill symbol table with values,
-        //         mark any mistakes
+        // Pass 2: understand types, check correctness of code
 
         public bool Analyse()
         {
@@ -56,7 +54,7 @@ namespace Marlin.SemanticAnalysis
             start = Program.CurrentTimeMillis();
             bool outcome = Pass2();
             passTwoTookMs += Program.CurrentTimeMillis() - start;
-
+            
             if (Program.DEBUG_MODE)
             {
                 Console.WriteLine();

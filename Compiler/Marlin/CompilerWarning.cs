@@ -50,6 +50,9 @@ namespace Marlin
             public const string UNKNOWN_SYMBOL = "MAR0020";
             public const string EXPECTED_SET_SEMICOLON_DECLARE_VAR = "MAR0021";
             public const string EXPECTED_IDENTIFIER_IN_TYPE_NAME = "MAR0022";
+            public const string VARIABLE_USED_BEFORE_DECLARATION = "MAR0023";
+            public const string ARGUMENT_MISMATCH = "MAR0024";
+            public const string VOID_MISUSE = "MAR0025";
         }
 
         public Level WarningLevel { get; private set; }

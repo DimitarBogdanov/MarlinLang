@@ -33,6 +33,7 @@ namespace Marlin.Parsing
     public class Node
     {
         public string Id { get; set; } = "";
+        public string StringType { get; set; } = "?";
         public Node Parent { get; set; } = null;
         public List<Node> Children { get; set; } = new();
         public NodeType Type { get; set; } = NodeType.BLOCK;
@@ -70,6 +71,13 @@ namespace Marlin.Parsing
     public class BinaryOperatorNode : Node
     {
         public string Value { get; private set; }
+        public new string StringType
+        {
+            get
+            {
+                return Left.StringType;
+            }
+        }
         public Node Left { get; private set; }
         public Node Right { get; private set; }
 
@@ -98,12 +106,13 @@ namespace Marlin.Parsing
 
     public class ClassTemplateNode : Node
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
         public ClassTemplateNode(string name, Token token) : base(token)
         {
             Name = name;
 
+            StringType = name;
             Type = NodeType.CLASS_TEMPLATE;
         }
 
@@ -130,6 +139,7 @@ namespace Marlin.Parsing
             FuncType = type;
             Args = args;
 
+            StringType = "func";
             Type = NodeType.FUNCTION;
         }
 
@@ -147,12 +157,15 @@ namespace Marlin.Parsing
     public class FuncCallNode : Node
     {
         public string Name { get; private set; }
+        public List<Node> Args { get; private set; }
 
         public FuncCallNode(string name, List<Node> args, Token token) : base(token)
         {
             Name = name;
+            Args = args;
             Children = args;
 
+            StringType = "?";
             Type = NodeType.FUNCTION_CALL;
         }
 
@@ -169,12 +182,13 @@ namespace Marlin.Parsing
 
     public class NameReferenceNode : Node
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
         public NameReferenceNode(string name, Token token) : base(token)
         {
             Name = name;
 
+            StringType = name;
             Type = NodeType.NAME_REFERENCE;
         }
 
@@ -202,6 +216,7 @@ namespace Marlin.Parsing
             Value = value;
             Children.Add(value);
 
+            StringType = VarType;
             Type = NodeType.VARIABLE_DECLARATION;
         }
 
@@ -227,6 +242,7 @@ namespace Marlin.Parsing
             Value = value;
             Children.Add(value);
 
+            StringType = value.StringType;
             Type = NodeType.VARIABLE_ASSIGNMENT;
         }
 
@@ -249,6 +265,7 @@ namespace Marlin.Parsing
         {
             Value = value;
 
+            StringType = "string";
             Type = NodeType.STRING;
         }
 
@@ -271,6 +288,7 @@ namespace Marlin.Parsing
         {
             Value = value;
 
+            StringType = "boolean";
             Type = NodeType.BOOLEAN;
         }
 
@@ -293,6 +311,7 @@ namespace Marlin.Parsing
         {
             Value = value;
 
+            StringType = "int";
             Type = NodeType.NUMBER_INT;
         }
 
@@ -315,6 +334,7 @@ namespace Marlin.Parsing
         {
             Value = value;
 
+            StringType = "double";
             Type = NodeType.NUMBER_DBL;
         }
 

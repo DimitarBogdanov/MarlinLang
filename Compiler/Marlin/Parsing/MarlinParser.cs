@@ -301,9 +301,31 @@ namespace Marlin.Parsing
                             code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
                             message: "expected identifier for type, got " + argTypeToken.type,
                             file: file,
-                            rootCause: stream.Peek()
+                            rootCause: argTypeToken
                         ));
                     }
+
+                    while (stream.Peek().type == TokenType.DOT)
+                    {
+                        stream.Next(); // consume dot
+                        Token nextToken = stream.Next();
+                        if (nextToken.type == TokenType.IDENTIFIER)
+                        {
+                            argTypeToken = new Token(TokenType.IDENTIFIER, argTypeToken.value + "." + nextToken.value, argTypeToken.line, argTypeToken.col);
+                        }
+                        else
+                        {
+                            warnings.Add(new(
+                                level: Level.ERROR,
+                                source: Source.PARSER,
+                                code: ErrorCode.EXPECTED_IDENTIFIER_IN_TYPE_NAME,
+                                message: "expected identifier in nested type name, got " + nextToken.type,
+                                file: file,
+                                rootCause: nextToken
+                            ));
+                        }
+                    }
+
                     Token argNameToken = stream.Next();
                     if (argNameToken.type != TokenType.IDENTIFIER)
                     {
@@ -313,7 +335,7 @@ namespace Marlin.Parsing
                             code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
                             message: "expected identifier for name, got " + argNameToken.type,
                             file: file,
-                            rootCause: stream.Peek()
+                            rootCause: argNameToken
                         ));
                     }
 
@@ -559,104 +581,9 @@ namespace Marlin.Parsing
                 // Acceptable: function call, variable declaration and assignment
 
                 // Function call
-                if (stream.Peek().type == TokenType.PAREN_LEFT)
-                {
-                    // Collect arguments
-                    List<Node> args = new();
-                    // Opening paren
-                    stream.Next(); // consume '('
-                    bool closedArgs = false;
-                    while (stream.Peek().type != TokenType.PAREN_RIGHT)
-                    {
-                        if (stream.Peek().type == TokenType.EOF)
-                        {
-                            warnings.Add(new(
-                                level: Level.ERROR,
-                                source: Source.PARSER,
-                                code: ErrorCode.UNEXPECTED_EOF,
-                                message: "unexpected EOF - unfinished argument list",
-                                file: file,
-                                rootCause: stream.Peek()
-                            ));
-                            return null;
-                        }
+                
 
-                        args.Add(ExpectExpression());
-
-                        if (stream.Peek().type == TokenType.COMMA)
-                        {
-                            if (stream.Peek(2).type == TokenType.PAREN_RIGHT)
-                            {
-                                warnings.Add(new(
-                                    level: Level.ERROR,
-                                    source: Source.PARSER,
-                                    code: ErrorCode.CANNOT_HAVE_PAREN_AFTER_COMMA_ARGLIST,
-                                    message: "cannot have ')' after comma in argument list",
-                                    file: file,
-                                    rootCause: stream.Peek()
-                                ));
-                            }
-                            stream.Next();
-                        }
-                        else if (stream.Peek().type == TokenType.PAREN_RIGHT)
-                        {
-                            closedArgs = true;
-                            stream.Next();
-                            break;
-                        }
-                        else
-                        {
-                            warnings.Add(new(
-                                level: Level.ERROR,
-                                source: Source.PARSER,
-                                code: ErrorCode.EXPECTED_COMMA_ARGLIST,
-                                message: "expected comma",
-                                file: file,
-                                rootCause: stream.Peek()
-                            ));
-                        }
-                    }
-
-                    if (!closedArgs)
-                    {
-                        if (stream.Peek().type == TokenType.PAREN_RIGHT)
-                        {
-                            stream.Next();
-                        }
-                        else
-                        {
-                            warnings.Add(new(
-                                level: Level.ERROR,
-                                source: Source.PARSER,
-                                code: ErrorCode.EXPECTED_PAREN_CLOSE_ARGLIST,
-                                message: "expected ')' to close arguments list, got " + stream.Peek().type,
-                                file: file,
-                                rootCause: stream.Peek()
-                            ));
-                        }
-                    }
-
-                    // We want a semicolon here
-                    if (stream.Peek().type == TokenType.SEMICOLON)
-                    {
-                        stream.Next();
-                    }
-                    else
-                    {
-                        warnings.Add(new(
-                            level: Level.ERROR,
-                            source: Source.PARSER,
-                            code: ErrorCode.MISSING_SEMICOLON,
-                            message: "missing semicolon",
-                            file: file,
-                            rootCause: stream.Peek()
-                        ));
-                    }
-
-                    return new FuncCallNode(identifier.value, args, identifier);
-                }
-
-                // Variable declaration
+                // Variable declaration or function call
                 if (stream.Peek().type == TokenType.DOT || stream.Peek().type == TokenType.IDENTIFIER)
                 {
                     while (stream.Peek().type == TokenType.DOT)
@@ -726,6 +653,102 @@ namespace Marlin.Parsing
                         }
 
                         return new VarDeclareNode(identifier.value, nameToken.value, value, identifier);
+                    }
+                    else if (stream.Peek().type == TokenType.PAREN_LEFT)
+                    {
+                        // Collect arguments
+                        List<Node> args = new();
+                        // Opening paren
+                        stream.Next(); // consume '('
+                        bool closedArgs = false;
+                        while (stream.Peek().type != TokenType.PAREN_RIGHT)
+                        {
+                            if (stream.Peek().type == TokenType.EOF)
+                            {
+                                warnings.Add(new(
+                                    level: Level.ERROR,
+                                    source: Source.PARSER,
+                                    code: ErrorCode.UNEXPECTED_EOF,
+                                    message: "unexpected EOF - unfinished argument list",
+                                    file: file,
+                                    rootCause: stream.Peek()
+                                ));
+                                return null;
+                            }
+
+                            args.Add(ExpectExpression());
+
+                            if (stream.Peek().type == TokenType.COMMA)
+                            {
+                                if (stream.Peek(2).type == TokenType.PAREN_RIGHT)
+                                {
+                                    warnings.Add(new(
+                                        level: Level.ERROR,
+                                        source: Source.PARSER,
+                                        code: ErrorCode.CANNOT_HAVE_PAREN_AFTER_COMMA_ARGLIST,
+                                        message: "cannot have ')' after comma in argument list",
+                                        file: file,
+                                        rootCause: stream.Peek()
+                                    ));
+                                }
+                                stream.Next();
+                            }
+                            else if (stream.Peek().type == TokenType.PAREN_RIGHT)
+                            {
+                                closedArgs = true;
+                                stream.Next();
+                                break;
+                            }
+                            else
+                            {
+                                warnings.Add(new(
+                                    level: Level.ERROR,
+                                    source: Source.PARSER,
+                                    code: ErrorCode.EXPECTED_COMMA_ARGLIST,
+                                    message: "expected comma",
+                                    file: file,
+                                    rootCause: stream.Peek()
+                                ));
+                            }
+                        }
+
+                        if (!closedArgs)
+                        {
+                            if (stream.Peek().type == TokenType.PAREN_RIGHT)
+                            {
+                                stream.Next();
+                            }
+                            else
+                            {
+                                warnings.Add(new(
+                                    level: Level.ERROR,
+                                    source: Source.PARSER,
+                                    code: ErrorCode.EXPECTED_PAREN_CLOSE_ARGLIST,
+                                    message: "expected ')' to close arguments list, got " + stream.Peek().type,
+                                    file: file,
+                                    rootCause: stream.Peek()
+                                ));
+                            }
+                        }
+
+                        // We want a semicolon here
+                        if (stream.Peek().type == TokenType.SEMICOLON)
+                        {
+                            stream.Next();
+                        }
+                        else
+                        {
+                            warnings.Add(new(
+                                level: Level.ERROR,
+                                source: Source.PARSER,
+                                code: ErrorCode.MISSING_SEMICOLON,
+                                message: "missing semicolon",
+                                file: file,
+                                rootCause: stream.Peek()
+                            ));
+                        }
+
+                        return new FuncCallNode(identifier.value, args, identifier);
                     }
                     else
                     {

@@ -1,5 +1,6 @@
 ﻿using Marlin.Parsing;
 using System;
+using System.Collections.Generic;
 using static Marlin.SemanticAnalysis.SymbolData;
 
 namespace Marlin.SemanticAnalysis
@@ -80,15 +81,16 @@ namespace Marlin.SemanticAnalysis
         {
             string currentScope = currentSymbolPath;
             currentSymbolPath += "." + node.Name;
-
+            
             symbolTable.AddSymbol(currentSymbolPath, new()
             {
                 fullName = currentSymbolPath,
                 name = node.Name,
                 nationality = SymbolNationality.CLASS,
-                type = node.Name
+                type = currentSymbolPath,
+                data = new()
             }, node, analyser);
-            
+
             VisitBlock(node);
             currentSymbolPath = currentScope;
         }
@@ -97,26 +99,35 @@ namespace Marlin.SemanticAnalysis
         {
             string currentScope = currentSymbolPath;
             currentSymbolPath += "." + node.Name;
-            
-            symbolTable.AddSymbol(currentSymbolPath, new()
-            {
-                fullName = currentSymbolPath,
-                name = node.Name,
-                nationality = SymbolNationality.FUNC,
-                type = node.FuncType
-            }, node, analyser);
+
+            Dictionary<NameReferenceNode, NameReferenceNode> args = new();
 
             // Args
             foreach (var arg in node.Args)
             {
+                args.Add(arg.Key, arg.Value);
                 symbolTable.AddSymbol(currentSymbolPath + "." + arg.Value.Name, new()
                 {
                     fullName = currentSymbolPath + "." + arg.Value.Name,
                     name = arg.Value.Name,
                     nationality = SymbolNationality.VARIABLE,
-                    type = arg.Key.Name
+                    type = arg.Key.Name,
+                    data = new()
                 }, node, analyser);
+                arg.Key.Name = currentSymbolPath + "." + arg.Value.Name;
             }
+
+            symbolTable.AddSymbol(currentSymbolPath, new()
+            {
+                fullName = currentSymbolPath,
+                name = node.Name,
+                nationality = SymbolNationality.FUNC,
+                type = node.FuncType,
+                data = new Dictionary<string, object>()
+                {
+                    ["args"] = args
+                }
+            }, node, analyser);
 
             // Function members
             VisitBlock(node);
@@ -130,7 +141,8 @@ namespace Marlin.SemanticAnalysis
                 fullName = currentSymbolPath + "." + node.Name,
                 name = node.Name,
                 nationality = SymbolNationality.VARIABLE,
-                type = node.VarType
+                type = node.VarType,
+                data = new()
             }, node, analyser);
         }
 

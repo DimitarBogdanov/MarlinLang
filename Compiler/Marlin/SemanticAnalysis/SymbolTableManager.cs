@@ -29,7 +29,8 @@ namespace Marlin.SemanticAnalysis
         static SymbolTableManager()
         {
             #region void and null
-
+            symbols.Add("null", null);
+            symbols.Add("void", SymbolData.Void);
             #endregion
 
             #region shorthands (string -> marlin.String)
@@ -39,7 +40,26 @@ namespace Marlin.SemanticAnalysis
                 fullName = "string",
                 name = "string",
                 nationality = SymbolNationality.TYPE_REF,
-                type = "marlin.String"
+                type = "marlin.String",
+                data = new()
+            });
+
+            symbols.Add("int", new()
+            {
+                fullName = "int",
+                name = "int",
+                nationality = SymbolNationality.TYPE_REF,
+                type = "marlin.Int",
+                data = new()
+            });
+
+            symbols.Add("boolean", new()
+            {
+                fullName = "boolean",
+                name = "boolean",
+                nationality = SymbolNationality.TYPE_REF,
+                type = "marlin.Boolean",
+                data = new()
             });
 
             #endregion
@@ -51,7 +71,26 @@ namespace Marlin.SemanticAnalysis
                 fullName = "marlin.String",
                 name = "String",
                 nationality = SymbolNationality.CLASS,
-                type = "marlin.String"
+                type = "marlin.String",
+                data = new()
+            });
+
+            symbols.Add("marlin.Int", new()
+            {
+                fullName = "marlin.Int",
+                name = "Int",
+                nationality = SymbolNationality.CLASS,
+                type = "marlin.Int",
+                data = new()
+            });
+
+            symbols.Add("marlin.Boolean", new()
+            {
+                fullName = "marlin.Boolean",
+                name = "Boolean",
+                nationality = SymbolNationality.CLASS,
+                type = "marlin.Boolean",
+                data = new()
             });
 
             #endregion
@@ -59,6 +98,7 @@ namespace Marlin.SemanticAnalysis
 
         public bool AddSymbol(string id, SymbolData data, Node nodeReference, MarlinSemanticAnalyser analyser)
         {
+            System.Console.WriteLine("Adding symbol " + id + "              " + data);
             if (symbols.ContainsKey(id))
             {
                 analyser.AddWarning(new(
@@ -73,6 +113,9 @@ namespace Marlin.SemanticAnalysis
             }
             else
             {
+                if (data.data == null)
+                    data.data = new();
+
                 symbols.Add(id, data);
                 return true;
             }
@@ -91,7 +134,7 @@ namespace Marlin.SemanticAnalysis
                     level: Level.ERROR,
                     source: Source.SEMANTIC_ANALYSIS,
                     code: ErrorCode.UNKNOWN_SYMBOL,
-                    message: "unknown symbol '" + data.name + "'",
+                    message: "unknown symbol '" + data.name + "'" + (Program.DEBUG_MODE ? $" ({data.fullName}     {id})" : ""),
                     file: file,
                     rootCause: nodeReference.Token 
                 ));
@@ -137,8 +180,46 @@ namespace Marlin.SemanticAnalysis
             }
             else
             {
-                System.Console.WriteLine("Symbol " + id + " does not exist");
                 return null;
+            }
+        }
+
+        public static SymbolData GetSymbol(string symbolName, string scope)
+        {
+            string originalScope = scope;
+            while (true)
+            {
+                KeyValuePair<string, SymbolData>[] arr = GetSymbolChildren(scope);
+                foreach (var data in arr)
+                {
+                    if ((data.Value != null && data.Value.name == symbolName) || (data.Key == symbolName))
+                    {
+                        if (data.Value != null)
+                        {
+                            if (data.Value.nationality == SymbolNationality.TYPE_REF)
+                            {
+                                return GetSymbol(data.Value.type, originalScope);
+                            } else
+                            {
+                                return data.Value;
+                            }
+                        }
+                    }
+                }
+
+                int lastDot = scope.LastIndexOf('.');
+                if (lastDot == -1 && scope == "")
+                {
+                    return null;
+                }
+                else if (lastDot == -1)
+                {
+                    scope = "";
+                }
+                else
+                {
+                    scope = scope.Remove(lastDot, scope.Length - lastDot);
+                }
             }
         }
 
@@ -154,8 +235,18 @@ namespace Marlin.SemanticAnalysis
 
     public class SymbolData
     {
+        public static SymbolData Void = new()
+        {
+            name = "void",
+            nationality = SymbolNationality.SPECIAL,
+            fullName = "void",
+            type = "void",
+            data = new()
+        };
+
         public enum SymbolNationality
         {
+            SPECIAL,
             VARIABLE,
             CLASS,
             ENUM,
@@ -167,10 +258,11 @@ namespace Marlin.SemanticAnalysis
         public SymbolNationality nationality;
         public string type;
         public string fullName;
+        public Dictionary<string, object> data;
 
         public override string ToString()
         {
-            return $"Symbol{{name: {name}; nationality: {nationality}; type: {type}; fullName: {fullName}";
+            return $"Symbol{{name: {name}; nationality: {nationality}; type: {type}; fullName: {fullName}; data amount: {data.Count}}}";
         }
     }
 }
