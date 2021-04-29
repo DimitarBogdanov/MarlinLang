@@ -16,17 +16,17 @@ using static Marlin.SemanticAnalysis.SymbolData;
 
 namespace Marlin.SemanticAnalysis
 {
-    public class SymbolTableManager
+    public class SymbolTable
     {
         private readonly string file;
         public static readonly Dictionary<string, SymbolData> symbols = new();
         
-        public SymbolTableManager(string file)
+        public SymbolTable(string file)
         {
             this.file = file;
         }
 
-        static SymbolTableManager()
+        static SymbolTable()
         {
             #region void and null
             symbols.Add("null", null);
@@ -98,7 +98,6 @@ namespace Marlin.SemanticAnalysis
 
         public bool AddSymbol(string id, SymbolData data, Node nodeReference, MarlinSemanticAnalyser analyser)
         {
-            System.Console.WriteLine("Adding symbol " + id + "              " + data);
             if (symbols.ContainsKey(id))
             {
                 analyser.AddWarning(new(

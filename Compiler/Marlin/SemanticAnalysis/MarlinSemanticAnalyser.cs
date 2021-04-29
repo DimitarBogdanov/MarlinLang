@@ -18,7 +18,7 @@ namespace Marlin.SemanticAnalysis
     {
         private readonly Node rootNode;
         private readonly string file;
-        private readonly SymbolTableManager symbolTable;
+        private readonly SymbolTable symbolTable;
         public readonly List<CompilerWarning> warnings;
         public static long passOneTookMs = 0;
         public static long passTwoTookMs = 0;
@@ -61,7 +61,7 @@ namespace Marlin.SemanticAnalysis
                 Console.WriteLine("Symbol table dump BEGIN");
                 // p.s. VS thinks the null check can be simplified. no, it can't
 #pragma warning disable IDE0029
-                foreach (var kvp in SymbolTableManager.symbols)
+                foreach (var kvp in SymbolTable.symbols)
                 {
                     Console.WriteLine("  " + kvp.Key + ": " + (kvp.Value == null ? "null" : kvp.Value));
                 }

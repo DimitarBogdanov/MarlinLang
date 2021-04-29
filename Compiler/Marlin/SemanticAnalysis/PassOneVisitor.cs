@@ -7,12 +7,12 @@ namespace Marlin.SemanticAnalysis
 {
     public class PassOneVisitor : IVisitor
     {
-        private readonly SymbolTableManager symbolTable;
+        private readonly SymbolTable symbolTable;
         private readonly MarlinSemanticAnalyser analyser;
 
         private string currentSymbolPath = "__global__";
 
-        public PassOneVisitor(SymbolTableManager symbolTable, MarlinSemanticAnalyser analyser)
+        public PassOneVisitor(SymbolTable symbolTable, MarlinSemanticAnalyser analyser)
         {
             this.symbolTable = symbolTable;
             this.analyser = analyser;

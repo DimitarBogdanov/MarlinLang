@@ -8,7 +8,7 @@ namespace Marlin.SemanticAnalysis
 {
     public class PassTwoVisitor : IVisitor
     {
-        private readonly SymbolTableManager symbolTable;
+        private readonly SymbolTable symbolTable;
         private readonly MarlinSemanticAnalyser analyser;
 
         private readonly string file = "";
@@ -16,7 +16,7 @@ namespace Marlin.SemanticAnalysis
         private string currentSymbolPath = "__global__";
         public bool success = true;
 
-        public PassTwoVisitor(SymbolTableManager symbolTable, MarlinSemanticAnalyser analyser, string file)
+        public PassTwoVisitor(SymbolTable symbolTable, MarlinSemanticAnalyser analyser, string file)
         {
             this.symbolTable = symbolTable;
             this.analyser = analyser;
@@ -97,13 +97,13 @@ namespace Marlin.SemanticAnalysis
             currentSymbolPath += "." + node.Name;
 
             string path = currentSymbolPath;
-            SymbolData data = SymbolTableManager.GetSymbol(path, currentSymbolPath);
+            SymbolData data = SymbolTable.GetSymbol(path, currentSymbolPath);
             if (data == null)
             {
                 return;
             }
 
-            SymbolData typeData = SymbolTableManager.GetSymbol(data.type, currentSymbolPath);
+            SymbolData typeData = SymbolTable.GetSymbol(data.type, currentSymbolPath);
             if (typeData == null)
             {
                 return;
@@ -127,11 +127,11 @@ namespace Marlin.SemanticAnalysis
         {
             // Check var type
             string path = currentSymbolPath + "." + node.Name;
-            SymbolData data = SymbolTableManager.GetSymbol(path);
+            SymbolData data = SymbolTable.GetSymbol(path);
             if (data == null)
                 return;
 
-            SymbolData typeData = SymbolTableManager.GetSymbol(data.type);
+            SymbolData typeData = SymbolTable.GetSymbol(data.type);
             if (typeData == null)
                 return;
 
@@ -151,9 +151,9 @@ namespace Marlin.SemanticAnalysis
             if (!node.Name.Contains('.'))
             {
                 // Accessible from this scope
-                if (SymbolTableManager.ContainsSymbol(node.Name, currentSymbolPath))
+                if (SymbolTable.ContainsSymbol(node.Name, currentSymbolPath))
                 {
-                    SymbolData data = SymbolTableManager.GetSymbol(node.Name, currentSymbolPath);
+                    SymbolData data = SymbolTable.GetSymbol(node.Name, currentSymbolPath);
                     // Check arg counts match
                     Dictionary<NameReferenceNode, NameReferenceNode> remoteArgs = (Dictionary<NameReferenceNode, NameReferenceNode>) data.data["args"];
                     List<Node> localArgs = node.Args;
@@ -173,7 +173,7 @@ namespace Marlin.SemanticAnalysis
                     int i = 0;
                     foreach (var kvp in remoteArgs)
                     {
-                        string remoteType = SymbolTableManager.GetSymbol(kvp.Key.Name, currentSymbolPath).type;
+                        string remoteType = SymbolTable.GetSymbol(kvp.Key.Name, currentSymbolPath).type;
 
                         symbolTable.UpdateSymbol(kvp.Key.Name, new()
                         {
@@ -203,7 +203,7 @@ namespace Marlin.SemanticAnalysis
                             }
                         }
 
-                        string localType = SymbolTableManager.GetSymbol(localArgs[i].StringType, currentSymbolPath).fullName;
+                        string localType = SymbolTable.GetSymbol(localArgs[i].StringType, currentSymbolPath).fullName;
 
                         if (remoteType != localType)
                         {
@@ -236,7 +236,7 @@ namespace Marlin.SemanticAnalysis
                 // Check if all symbols exist
                 foreach (string path in node.Name.Split('.'))
                 {
-                    if (!SymbolTableManager.ContainsSymbol(path, currentSymbolPath))
+                    if (!SymbolTable.ContainsSymbol(path, currentSymbolPath))
                     {
                         analyser.AddWarning(new(
                             level: Level.ERROR,
