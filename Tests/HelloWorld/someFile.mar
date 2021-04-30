@@ -1,5 +1,5 @@
 class Test {
 	func void main() {
-		AnotherClass.hello();
+		
 	}
 }

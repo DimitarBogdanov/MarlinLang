@@ -142,12 +142,18 @@ namespace Marlin
                     {
                         // No errors
                         build.status = FileBuildStatus.AWAITING_SEMANTIC_ANALYSIS_PASS1;
+
+                        if (Program.CREATE_FILE_TREE_GRAPHS)
+                            Utils.GenerateImage(build.rootNode, filePath + ".png");
                     }
                     else
                     {
                         // Fatal errors discovered
                         build.status = FileBuildStatus.FAILED;
                     }
+
+                    if (build.status == FileBuildStatus.FAILED || !Program.CREATE_FILE_TREE_GRAPHS)
+                        Utils.DeleteImageIfExists(filePath + ".png");
                 }
             }
 
