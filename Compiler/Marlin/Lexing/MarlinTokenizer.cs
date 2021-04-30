@@ -19,7 +19,7 @@ namespace Marlin.Lexing
     {
         private readonly string path;
         private readonly TokenStream tokens;
-        public List<CompilerWarning> errors = new();
+        public List<CompilerWarning> warnings = new();
         public static long totalTokenizationTime = 0;
 
         public MarlinTokenizer(string path)
@@ -30,7 +30,7 @@ namespace Marlin.Lexing
 
         public TokenStream Tokenize()
         {
-            long start = Program.CurrentTimeMillis();
+            long start = Utils.CurrentTimeMillis();
 
             bool inIdentifier = false;
             bool inString = false;
@@ -259,7 +259,7 @@ namespace Marlin.Lexing
                                     continue;
                                 } else
                                 {
-                                    errors.Add(new(
+                                    warnings.Add(new(
                                         level: Level.ERROR,
                                         source: Source.LEXER,
                                         code: ErrorCode.UNKNOWN_TOKEN,
@@ -281,7 +281,7 @@ namespace Marlin.Lexing
                                     continue;
                                 } else
                                 {
-                                    errors.Add(new(
+                                    warnings.Add(new(
                                         level: Level.ERROR,
                                         source: Source.LEXER,
                                         code: ErrorCode.UNKNOWN_TOKEN,
@@ -406,7 +406,7 @@ namespace Marlin.Lexing
                                     {
                                         if (currentChar > 32)
                                         {
-                                            errors.Add(new(
+                                            warnings.Add(new(
                                                 level: Level.ERROR,
                                                 source: Source.LEXER,
                                                 code: ErrorCode.UNKNOWN_TOKEN,
@@ -420,7 +420,7 @@ namespace Marlin.Lexing
                                 }
                                 else
                                 {
-                                    errors.Add(new(
+                                    warnings.Add(new(
                                         level: Level.ERROR,
                                         source: Source.LEXER,
                                         code: ErrorCode.UNKNOWN_TOKEN,
@@ -457,7 +457,7 @@ namespace Marlin.Lexing
 
             tokens.Add(new(TokenType.EOF, "<EOF>", line, col));
 
-            totalTokenizationTime += (Program.CurrentTimeMillis() - start);
+            totalTokenizationTime += (Utils.CurrentTimeMillis() - start);
 
             return tokens;
         }

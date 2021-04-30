@@ -41,50 +41,24 @@ namespace Marlin.SemanticAnalysis
         //         fill symbol table with keys and types for variables
         // Pass 2: understand types, check correctness of code
 
-        public bool Analyse()
+        public void Pass1()
         {
-            long start;
+            long start = Utils.CurrentTimeMillis();
 
-            // Pass 1
-            start = Program.CurrentTimeMillis();
-            Pass1();
-            passOneTookMs += Program.CurrentTimeMillis() - start;
-
-            // Pass 2
-            start = Program.CurrentTimeMillis();
-            bool outcome = Pass2();
-            passTwoTookMs += Program.CurrentTimeMillis() - start;
-            
-            if (Program.DEBUG_MODE)
-            {
-                Console.WriteLine();
-                Console.WriteLine("Symbol table dump BEGIN");
-                // p.s. VS thinks the null check can be simplified. no, it can't
-#pragma warning disable IDE0029
-                foreach (var kvp in SymbolTable.symbols)
-                {
-                    Console.WriteLine("  " + kvp.Key + ": " + (kvp.Value == null ? "null" : kvp.Value));
-                }
-#pragma warning restore IDE0029
-                Console.WriteLine("Symbol table dump END");
-            }
-
-            // Return result
-            return outcome;
-        }
-
-        private bool Pass1()
-        {
             PassOneVisitor visitor = new(symbolTable, this);
             visitor.Visit(rootNode);
-            return true;
+
+            passOneTookMs += Utils.CurrentTimeMillis() - start;
         }
 
-        private bool Pass2()
+        public void Pass2()
         {
+            long start = Utils.CurrentTimeMillis();
+
             PassTwoVisitor visitor = new(symbolTable, this, file);
             visitor.Visit(rootNode);
-            return visitor.success;
+
+            passTwoTookMs += Utils.CurrentTimeMillis() - start;
         }
     }
 }

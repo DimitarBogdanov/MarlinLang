@@ -14,7 +14,6 @@ namespace Marlin.SemanticAnalysis
         private readonly string file = "";
         
         private string currentSymbolPath = "__global__";
-        public bool success = true;
 
         public PassTwoVisitor(SymbolTable symbolTable, MarlinSemanticAnalyser analyser, string file)
         {

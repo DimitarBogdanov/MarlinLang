@@ -34,11 +34,6 @@ namespace Marlin
             MarlinProgramBuilder.Build();
         }
 
-        public static long CurrentTimeMillis()
-        {
-            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        }
-
         public static void GenerateImage(Node root, string path)
         {
             TreeData.TreeDataTableDataTable table = new();
@@ -67,7 +62,8 @@ namespace Marlin
         {
             table.AddTreeDataTableRow(node.Id, (parent != null ? parent.Id : ""), node.Type.ToString(), node.ToString());
             foreach (Node childNode in node.Children)
-                AddChildrenRecursively(childNode, node, table);
+                if (childNode != null)
+                    AddChildrenRecursively(childNode, node, table);
         }
 
         private static void ParseOptions(string[] args)

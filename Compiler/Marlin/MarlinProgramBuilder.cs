@@ -11,22 +11,49 @@ namespace Marlin
 {
     public class MarlinProgramBuilder
     {
+        enum FileBuildStatus
+        {
+
+            FAILED,
+
+            AWAITING_TOKENIZATION,
+            AWAITING_PARSING,
+            AWAITING_SEMANTIC_ANALYSIS_PASS1,
+            AWAITING_SEMANTIC_ANALYSIS_PASS2
+        }
+
+        class FileBuild
+        {
+            // File status
+            public FileBuildStatus status;
+
+            // Shared information
+            public TokenStream tokenStream;
+            public Node rootNode;
+        }
+
         private readonly static List<CompilerWarning> allWarnings = new();
         private static bool buildFailed = false;
 
+        private static readonly Dictionary<string, FileBuild> fileStatuses = new();
+        private static readonly List<string> fileList = new();
+
         public static void Build()
         {
-            long startTime = Program.CurrentTimeMillis();
-            
+            long startTime = Utils.CurrentTimeMillis();
+
             Console.WriteLine("Building " + Program.SOURCE_DIR + " ...");
-            BuildDirectory(Program.SOURCE_DIR);
+
+            Build(Program.SOURCE_DIR);
+
             Console.WriteLine();
 
-            long endTime = Program.CurrentTimeMillis();
+            long endTime = Utils.CurrentTimeMillis();
 
             // Log messages/warns/errors
             ConsoleColor previousColor = Console.ForegroundColor;
-            allWarnings.ForEach(delegate (CompilerWarning warning) {
+            allWarnings.ForEach(delegate (CompilerWarning warning)
+            {
                 switch (warning.WarningLevel)
                 {
                     case Level.MESSAGE:
@@ -59,80 +86,139 @@ namespace Marlin
                 Console.WriteLine("        Pass 2: " + MarlinSemanticAnalyser.passTwoTookMs + " ms");
             }
         }
-        
-        private static void BuildDirectory(string path)
+
+        private static void Build(string path)
         {
-            foreach (string childPath in Directory.EnumerateFileSystemEntries(path))
+            BuildDirectory(path);
+
+            // Tokenization of each file
+            foreach (string filePath in fileList)
             {
-                if (!File.Exists(childPath)) continue;
-
-                FileAttributes attributes = File.GetAttributes(childPath);
-                if (attributes.HasFlag(FileAttributes.Directory))
-                    BuildDirectory(childPath);
-                else if (childPath.EndsWith(".mar"))
-                    BuildFile(childPath);
-            }
-        }
-
-        private static void BuildFile(string path)
-        {
-            Console.WriteLine("   Building file " + path + " ...");
-
-            MarlinTokenizer tokenizer = new(path);
-            TokenStream tokenStream = tokenizer.Tokenize();
-            allWarnings.AddRange(tokenizer.errors);
-
-            //
-            // ORDER OF COMPILATION
-            //
-            //   Lexer
-            // → Parser
-            // → Semantical analysis
-
-            if (tokenizer.errors.Count == 0)
-            {
-                // No tokenizer errors
-                MarlinParser parser = new(tokenStream, path);
-                Node rootNode = parser.Parse();
-                allWarnings.AddRange(parser.warnings);
-
-                if (!parser.warnings.Any(x => x.WarningLevel == Level.ERROR))
+                // Make sure file is allowed to be in this phase
+                fileStatuses.TryGetValue(filePath, out FileBuild build);
+                if (build.status == FileBuildStatus.AWAITING_TOKENIZATION)
                 {
-                    // No parser errors
-                    MarlinSemanticAnalyser analyser = new(rootNode, path);
-                    analyser.Analyse();
+                    // Start tokenization
+                    MarlinTokenizer tokenizer = new(filePath);
+                    build.tokenStream = tokenizer.Tokenize();
+                    allWarnings.AddRange(tokenizer.warnings);
+
+                    if (!tokenizer.warnings.Any(x => x.WarningLevel == Level.ERROR))
+                    {
+                        // No errors
+                        build.status = FileBuildStatus.AWAITING_PARSING;
+                    }
+                    else
+                    {
+                        // Fatal errors discovered
+                        build.status = FileBuildStatus.FAILED;
+                    }
+                }
+            }
+
+            // Parsing of each file
+            foreach (string filePath in fileList)
+            {
+                // Make sure file is allowed to be in this phase
+                fileStatuses.TryGetValue(filePath, out FileBuild build);
+                if (build.status == FileBuildStatus.AWAITING_PARSING)
+                {
+                    // Start tokenization
+                    MarlinParser parser = new(build.tokenStream, filePath);
+                    build.rootNode = parser.Parse();
+                    allWarnings.AddRange(parser.warnings);
+
+                    if (!parser.warnings.Any(x => x.WarningLevel == Level.ERROR))
+                    {
+                        // No errors
+                        build.status = FileBuildStatus.AWAITING_SEMANTIC_ANALYSIS_PASS1;
+                    }
+                    else
+                    {
+                        // Fatal errors discovered
+                        build.status = FileBuildStatus.FAILED;
+                    }
+                }
+            }
+
+            // Semantic analysis of each file
+            // Pass 1
+            foreach (string filePath in fileList)
+            {
+                Console.WriteLine("   " + filePath);
+                // Make sure file is allowed to be in this phase
+                fileStatuses.TryGetValue(filePath, out FileBuild build);
+                if (build.status == FileBuildStatus.AWAITING_SEMANTIC_ANALYSIS_PASS1)
+                {
+                    // Start tokenization
+                    MarlinSemanticAnalyser analyser = new(build.rootNode, filePath);
+                    analyser.Pass1();
                     allWarnings.AddRange(analyser.warnings);
 
                     if (!analyser.warnings.Any(x => x.WarningLevel == Level.ERROR))
                     {
-                        // No analyser errors
-                        // TODO
-                        if (Program.CREATE_FILE_TREE_GRAPHS)
-                        {
-                            Program.GenerateImage(rootNode, path + ".png");
-                        }
+                        // No errors
+                        build.status = FileBuildStatus.AWAITING_SEMANTIC_ANALYSIS_PASS2;
                     }
                     else
                     {
-                        // Analyser had errors
-                        buildFailed = true;
-                        Program.DeleteImageIfExists(path + ".png"); 
-                        return;
+                        // Fatal errors discovered
+                        build.status = FileBuildStatus.FAILED;
                     }
-                } else
-                {
-                    // Parser had errors
-                    buildFailed = true;
-                    Program.DeleteImageIfExists(path + ".png");
-                    return;
                 }
             }
-            else
+
+            // Semantic analysis of each file
+            // Pass 2
+            foreach (string filePath in fileList)
             {
-                // Tokenizer had errors
-                buildFailed = true;
-                Program.DeleteImageIfExists(path + ".png");
-                return;
+                // Make sure file is allowed to be in this phase
+                fileStatuses.TryGetValue(filePath, out FileBuild build);
+                if (build.status == FileBuildStatus.AWAITING_SEMANTIC_ANALYSIS_PASS2)
+                {
+                    // Start tokenization
+                    MarlinSemanticAnalyser analyser = new(build.rootNode, filePath);
+                    analyser.Pass2();
+                    allWarnings.AddRange(analyser.warnings);
+
+                    if (!analyser.warnings.Any(x => x.WarningLevel == Level.ERROR))
+                    {
+                        // No errors
+                        build.status = FileBuildStatus.AWAITING_SEMANTIC_ANALYSIS_PASS2;
+                    }
+                    else
+                    {
+                        // Fatal errors discovered
+                        build.status = FileBuildStatus.FAILED;
+                    }
+                }
+            }
+        }
+
+        private static void BuildDirectory(string path)
+        {
+            // Collect files that we will be compiling
+            foreach (string childPath in Directory.EnumerateFileSystemEntries(path))
+            {
+                if (!Utils.FireOrDirExists(path)) continue;
+                Console.WriteLine("   Looking at " + childPath);
+
+                FileAttributes attributes = File.GetAttributes(childPath);
+                if (attributes.HasFlag(FileAttributes.Directory))
+                {
+                    BuildDirectory(childPath);
+                }
+                else if (childPath.EndsWith(".mar"))
+                {
+                    fileList.Add(childPath);
+                    fileStatuses.Add(childPath, new()
+                    {
+                        status = FileBuildStatus.AWAITING_TOKENIZATION,
+
+                        tokenStream = null,
+                        rootNode = null
+                    });
+                }
             }
         }
     }

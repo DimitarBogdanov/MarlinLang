@@ -1,5 +1,5 @@
 class Test {
 	func void main() {
-		y.amazing(null);
+		AnotherClass.hello();
 	}
 }

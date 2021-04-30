@@ -89,7 +89,7 @@ namespace Marlin.Parsing
 
         public Node Parse()
         {
-            long start = Program.CurrentTimeMillis();
+            long start = Utils.CurrentTimeMillis();
             Node rootNode = new(null, "__ROOT__");
 
             while (stream.HasNext() && stream.Peek().type != TokenType.EOF)
@@ -102,7 +102,7 @@ namespace Marlin.Parsing
                     rootNode.AddChild(scope);
             }
 
-            totalParseTime += (Program.CurrentTimeMillis() - start);
+            totalParseTime += (Utils.CurrentTimeMillis() - start);
             return rootNode;
         }
 
