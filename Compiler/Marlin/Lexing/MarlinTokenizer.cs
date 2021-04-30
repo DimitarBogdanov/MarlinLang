@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) Dimitar Bogdanov
- * Filename:     Tokenizer.cs
+ * Filename:     MarlinTokenizer.cs
  * Project:      Marlin Compiler
  * License:      Creative Commons Attribution NoDerivs (CC-ND)
  * 

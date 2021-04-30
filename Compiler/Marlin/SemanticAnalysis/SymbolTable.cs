@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (C) Dimitar Bogdanov
- * Filename:     SymbolTableManager.cs
+ * Filename:     SymbolTable.cs
  * Project:      Marlin Compiler
  * License:      Creative Commons Attribution NoDerivs (CC-ND)
  * 
