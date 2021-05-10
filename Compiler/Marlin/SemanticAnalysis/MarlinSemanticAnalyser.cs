@@ -20,8 +20,11 @@ namespace Marlin.SemanticAnalysis
         private readonly string file;
         private readonly SymbolTable symbolTable;
         public readonly List<CompilerWarning> warnings;
-        public static long passOneTookMs = 0;
-        public static long passTwoTookMs = 0;
+        private static long passOneTookMs = 0;
+        private static long passTwoTookMs = 0;
+
+        public static long PassOneTookMs { get => passOneTookMs; set => passOneTookMs = value; }
+        public static long PassTwoTookMs { get => passTwoTookMs; set => passTwoTookMs = value; }
 
         public MarlinSemanticAnalyser(Node rootNode, string file)
         {
@@ -48,7 +51,7 @@ namespace Marlin.SemanticAnalysis
             PassOneVisitor visitor = new(symbolTable, this);
             visitor.Visit(rootNode);
 
-            passOneTookMs += Utils.CurrentTimeMillis() - start;
+            PassOneTookMs += Utils.CurrentTimeMillis() - start;
         }
 
         public void Pass2()
@@ -58,7 +61,7 @@ namespace Marlin.SemanticAnalysis
             PassTwoVisitor visitor = new(symbolTable, this, file);
             visitor.Visit(rootNode);
 
-            passTwoTookMs += Utils.CurrentTimeMillis() - start;
+            PassTwoTookMs += Utils.CurrentTimeMillis() - start;
         }
     }
 }

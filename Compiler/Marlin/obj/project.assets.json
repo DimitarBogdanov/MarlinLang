@@ -2,7 +2,22 @@
   "version": 3,
   "targets": {
     "net5.0": {
-      "Microsoft.NETCore.Platforms/6.0.0-preview.1.21102.12": {
+      "libLLVM/11.0.0": {
+        "type": "package"
+      },
+      "LLVMSharp/11.0.0-beta": {
+        "type": "package",
+        "dependencies": {
+          "libLLVM": "11.0.0"
+        },
+        "compile": {
+          "lib/net5.0/LLVMSharp.dll": {}
+        },
+        "runtime": {
+          "lib/net5.0/LLVMSharp.dll": {}
+        }
+      },
+      "Microsoft.NETCore.Platforms/5.0.0": {
         "type": "package",
         "compile": {
           "lib/netstandard1.0/_._": {}
@@ -20,10 +35,10 @@
           "lib/netstandard1.0/_._": {}
         }
       },
-      "Microsoft.Win32.SystemEvents/6.0.0-preview.1.21102.12": {
+      "Microsoft.Win32.SystemEvents/5.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.NETCore.Platforms": "6.0.0-preview.1.21102.12"
+          "Microsoft.NETCore.Platforms": "5.0.0"
         },
         "compile": {
           "ref/netstandard2.0/_._": {}
@@ -49,10 +64,10 @@
           "ref/netstandard1.3/System.Collections.dll": {}
         }
       },
-      "System.Drawing.Common/6.0.0-preview.1.21102.12": {
+      "System.Drawing.Common/5.0.2": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Win32.SystemEvents": "6.0.0-preview.1.21102.12"
+          "Microsoft.Win32.SystemEvents": "5.0.0"
         },
         "compile": {
           "ref/netcoreapp3.0/System.Drawing.Common.dll": {}
@@ -84,10 +99,37 @@
     }
   },
   "libraries": {
-    "Microsoft.NETCore.Platforms/6.0.0-preview.1.21102.12": {
-      "sha512": "mdF/p3nqdGOOzMGSiO1nf6M0/LmJziyfDW1H16TYwZvj++4+bC4VzH7BEUyX8IjcXJCxvO2uTfym/ZeNJVGthA==",
+    "libLLVM/11.0.0": {
+      "sha512": "nXWU4Vm1SYD8HHgsUQpgXk4bklfWo+TpA0YLst11Mr5B3p9ivdPBKeFhstCZdEu25uZS8AgIFo4voRSFJDrTRQ==",
       "type": "package",
-      "path": "microsoft.netcore.platforms/6.0.0-preview.1.21102.12",
+      "path": "libllvm/11.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "libllvm.11.0.0.nupkg.sha512",
+        "libllvm.nuspec",
+        "runtime.json"
+      ]
+    },
+    "LLVMSharp/11.0.0-beta": {
+      "sha512": "gLukaJvuwjmpQcWLvhTkDNZrt1r/dkPXEraSEhfZJqC9m5s4i+l8tBLdrXraaOH74h7MqGRp72rqyr8aYG4Q8A==",
+      "type": "package",
+      "path": "llvmsharp/11.0.0-beta",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net5.0/LLVMSharp.dll",
+        "lib/netcoreapp3.1/LLVMSharp.dll",
+        "lib/netstandard2.0/LLVMSharp.dll",
+        "llvmsharp.11.0.0-beta.nupkg.sha512",
+        "llvmsharp.nuspec"
+      ]
+    },
+    "Microsoft.NETCore.Platforms/5.0.0": {
+      "sha512": "VyPlqzH2wavqquTcYpkIIAQ6WdenuKoFN0BdYBbCWsclXacSOHNQn66Gt4z5NBqEYW0FAPm5rlvki9ZiCij5xQ==",
+      "type": "package",
+      "path": "microsoft.netcore.platforms/5.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -95,9 +137,11 @@
         "LICENSE.TXT",
         "THIRD-PARTY-NOTICES.TXT",
         "lib/netstandard1.0/_._",
-        "microsoft.netcore.platforms.6.0.0-preview.1.21102.12.nupkg.sha512",
+        "microsoft.netcore.platforms.5.0.0.nupkg.sha512",
         "microsoft.netcore.platforms.nuspec",
-        "runtime.json"
+        "runtime.json",
+        "useSharedDesignerContext.txt",
+        "version.txt"
       ]
     },
     "Microsoft.NETCore.Targets/1.1.0": {
@@ -115,10 +159,10 @@
         "runtime.json"
       ]
     },
-    "Microsoft.Win32.SystemEvents/6.0.0-preview.1.21102.12": {
-      "sha512": "gzLO6zNVtBMevH3EPLObUUL6g3hW3pSgqskSQvayoru48gMkEVUmfCNCvcQD8sET8B/VwWABsDYEFpq58JJ4GA==",
+    "Microsoft.Win32.SystemEvents/5.0.0": {
+      "sha512": "Bh6blKG8VAKvXiLe2L+sEsn62nc1Ij34MrNxepD2OCrS5cpCwQa9MeLyhVQPQ/R4Wlzwuy6wMK8hLb11QPDRsQ==",
       "type": "package",
-      "path": "microsoft.win32.systemevents/6.0.0-preview.1.21102.12",
+      "path": "microsoft.win32.systemevents/5.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -129,7 +173,7 @@
         "lib/net461/Microsoft.Win32.SystemEvents.xml",
         "lib/netstandard2.0/Microsoft.Win32.SystemEvents.dll",
         "lib/netstandard2.0/Microsoft.Win32.SystemEvents.xml",
-        "microsoft.win32.systemevents.6.0.0-preview.1.21102.12.nupkg.sha512",
+        "microsoft.win32.systemevents.5.0.0.nupkg.sha512",
         "microsoft.win32.systemevents.nuspec",
         "ref/net461/Microsoft.Win32.SystemEvents.dll",
         "ref/net461/Microsoft.Win32.SystemEvents.xml",
@@ -138,7 +182,9 @@
         "runtimes/win/lib/netcoreapp2.0/Microsoft.Win32.SystemEvents.dll",
         "runtimes/win/lib/netcoreapp2.0/Microsoft.Win32.SystemEvents.xml",
         "runtimes/win/lib/netcoreapp3.0/Microsoft.Win32.SystemEvents.dll",
-        "runtimes/win/lib/netcoreapp3.0/Microsoft.Win32.SystemEvents.xml"
+        "runtimes/win/lib/netcoreapp3.0/Microsoft.Win32.SystemEvents.xml",
+        "useSharedDesignerContext.txt",
+        "version.txt"
       ]
     },
     "System.Collections/4.3.0": {
@@ -209,10 +255,10 @@
         "system.collections.nuspec"
       ]
     },
-    "System.Drawing.Common/6.0.0-preview.1.21102.12": {
-      "sha512": "VfxLOd9L442ax5pxvMfqhQb5lS8/Z2j7zwJWAhAWtsgIyKlveV82RA9GbEJ2q8xq3s3sYyyoXgWGlyVKjBv1hw==",
+    "System.Drawing.Common/5.0.2": {
+      "sha512": "rvr/M1WPf24ljpvvrVd74+NdjRUJu1bBkspkZcnzSZnmAUQWSvanlQ0k/hVHk+cHufZbZfu7vOh/vYc0q5Uu/A==",
       "type": "package",
-      "path": "system.drawing.common/6.0.0-preview.1.21102.12",
+      "path": "system.drawing.common/5.0.2",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -245,8 +291,10 @@
         "runtimes/win/lib/netcoreapp2.0/System.Drawing.Common.dll",
         "runtimes/win/lib/netcoreapp3.0/System.Drawing.Common.dll",
         "runtimes/win/lib/netcoreapp3.0/System.Drawing.Common.xml",
-        "system.drawing.common.6.0.0-preview.1.21102.12.nupkg.sha512",
-        "system.drawing.common.nuspec"
+        "system.drawing.common.5.0.2.nupkg.sha512",
+        "system.drawing.common.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
       ]
     },
     "System.Runtime/4.3.0": {
@@ -344,8 +392,9 @@
   },
   "projectFileDependencyGroups": {
     "net5.0": [
+      "LLVMSharp >= 11.0.0-beta",
       "System.Collections >= 4.3.0",
-      "System.Drawing.Common >= 6.0.0-preview.1.21102.12"
+      "System.Drawing.Common >= 5.0.2"
     ]
   },
   "packageFolders": {
@@ -387,13 +436,17 @@
       "net5.0": {
         "targetAlias": "net5.0",
         "dependencies": {
+          "LLVMSharp": {
+            "target": "Package",
+            "version": "[11.0.0-beta, )"
+          },
           "System.Collections": {
             "target": "Package",
             "version": "[4.3.0, )"
           },
           "System.Drawing.Common": {
             "target": "Package",
-            "version": "[6.0.0-preview.1.21102.12, )"
+            "version": "[5.0.2, )"
           }
         },
         "imports": [

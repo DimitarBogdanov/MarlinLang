@@ -40,13 +40,17 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "dependencies": {
+            "LLVMSharp": {
+              "target": "Package",
+              "version": "[11.0.0-beta, )"
+            },
             "System.Collections": {
               "target": "Package",
               "version": "[4.3.0, )"
             },
             "System.Drawing.Common": {
               "target": "Package",
-              "version": "[6.0.0-preview.1.21102.12, )"
+              "version": "[5.0.2, )"
             }
           },
           "imports": [

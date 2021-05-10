@@ -9,6 +9,7 @@
  */
 
 using Marlin.Lexing;
+using Marlin.Optimisation;
 using Marlin.Parsing;
 using Marlin.SemanticAnalysis;
 using System;
@@ -29,7 +30,9 @@ namespace Marlin
             AWAITING_TOKENIZATION,
             AWAITING_PARSING,
             AWAITING_SEMANTIC_ANALYSIS_PASS1,
-            AWAITING_SEMANTIC_ANALYSIS_PASS2
+            AWAITING_SEMANTIC_ANALYSIS_PASS2,
+            AWAITING_CODE_OPTIMISATION,
+            AWAITING_CODE_GENERATION
         }
 
         class FileBuild
@@ -43,7 +46,13 @@ namespace Marlin
         }
 
         private readonly static List<CompilerWarning> allWarnings = new();
-        private static bool buildFailed = false;
+        private static bool BuildFailed
+        {
+            get
+            {
+                return allWarnings.Any(x => x.WarningLevel == Level.ERROR);
+            }
+        }
 
         private static readonly Dictionary<string, FileBuild> fileStatuses = new();
         private static readonly List<string> fileList = new();
@@ -85,15 +94,16 @@ namespace Marlin
             // Build status
             if (allWarnings.Count != 0)
                 Console.WriteLine();
-            Console.WriteLine($"Build completed in {((endTime - startTime) / 1000.0).ToString().Replace(',', '.')} sec: " + (buildFailed ? "FAILED" : "SUCCESSFUL"));
+            Console.WriteLine($"Build completed in {((endTime - startTime) / 1000.0).ToString().Replace(',', '.')} sec: " + (BuildFailed ? "FAILED" : "SUCCESSFUL"));
             if (Program.DEBUG_MODE)
             {
                 Console.WriteLine("    Of which...");
                 Console.WriteLine("    Lexing: " + MarlinTokenizer.totalTokenizationTime + " ms");
                 Console.WriteLine("    Parsing: " + MarlinParser.totalParseTime + " ms");
                 Console.WriteLine("    Semantic analysis:");
-                Console.WriteLine("        Pass 1: " + MarlinSemanticAnalyser.passOneTookMs + " ms");
-                Console.WriteLine("        Pass 2: " + MarlinSemanticAnalyser.passTwoTookMs + " ms");
+                Console.WriteLine("        Pass 1: " + MarlinSemanticAnalyser.PassOneTookMs + " ms");
+                Console.WriteLine("        Pass 2: " + MarlinSemanticAnalyser.PassTwoTookMs + " ms");
+                Console.WriteLine("    Code optimisation: " + MarlinCodeOptimiser.optimisationTime + " ms");
             }
         }
 
@@ -166,7 +176,7 @@ namespace Marlin
                 fileStatuses.TryGetValue(filePath, out FileBuild build);
                 if (build.status == FileBuildStatus.AWAITING_SEMANTIC_ANALYSIS_PASS1)
                 {
-                    // Start tokenization
+                    // Start analysis
                     MarlinSemanticAnalyser analyser = new(build.rootNode, filePath);
                     analyser.Pass1();
                     allWarnings.AddRange(analyser.warnings);
@@ -192,7 +202,7 @@ namespace Marlin
                 fileStatuses.TryGetValue(filePath, out FileBuild build);
                 if (build.status == FileBuildStatus.AWAITING_SEMANTIC_ANALYSIS_PASS2)
                 {
-                    // Start tokenization
+                    // Start analysis
                     MarlinSemanticAnalyser analyser = new(build.rootNode, filePath);
                     analyser.Pass2();
                     allWarnings.AddRange(analyser.warnings);
@@ -200,7 +210,32 @@ namespace Marlin
                     if (!analyser.warnings.Any(x => x.WarningLevel == Level.ERROR))
                     {
                         // No errors
-                        build.status = FileBuildStatus.AWAITING_SEMANTIC_ANALYSIS_PASS2;
+                        build.status = FileBuildStatus.AWAITING_CODE_OPTIMISATION;
+                    }
+                    else
+                    {
+                        // Fatal errors discovered
+                        build.status = FileBuildStatus.FAILED;
+                    }
+                }
+            }
+
+            // Code optimisation of each file
+            foreach (string filePath in fileList)
+            {
+                // Make sure file is allowed to be in this phase
+                fileStatuses.TryGetValue(filePath, out FileBuild build);
+                if (build.status == FileBuildStatus.AWAITING_CODE_OPTIMISATION)
+                {
+                    // Start optimisation
+                    MarlinCodeOptimiser optimiser = new(build.rootNode, filePath);
+                    optimiser.Optimise();
+                    allWarnings.AddRange(optimiser.warnings);
+
+                    if (!optimiser.warnings.Any(x => x.WarningLevel == Level.ERROR))
+                    {
+                        // No errors
+                        build.status = FileBuildStatus.AWAITING_CODE_GENERATION;
                     }
                     else
                     {
