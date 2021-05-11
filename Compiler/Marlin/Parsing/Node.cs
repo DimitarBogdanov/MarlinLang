@@ -8,8 +8,6 @@
  * https://creativecommons.org/licenses/by-nd/3.0/
  */
 
-using LLVMSharp.Interop;
-using Marlin.CodeGen;
 using Marlin.Lexing;
 using System;
 using System.Collections.Generic;
@@ -132,7 +130,7 @@ namespace Marlin.Parsing
 
     public class FuncNode : Node
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
         public string FuncType { get; private set; }
         public List<KeyValuePair<NameReferenceNode, NameReferenceNode>> Args { get; private set; }
 
@@ -159,7 +157,7 @@ namespace Marlin.Parsing
 
     public class FuncCallNode : Node
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
         public List<Node> Args { get; private set; }
 
         public FuncCallNode(string name, List<Node> args, Token token) : base(token)

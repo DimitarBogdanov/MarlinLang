@@ -30,8 +30,6 @@ namespace Marlin
             MarlinProgramBuilder.Build();
         }
 
-        
-
         private static void ParseOptions(string[] args)
         {
             CommandOptions options = new(args);

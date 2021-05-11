@@ -74,7 +74,15 @@ namespace Marlin.SemanticAnalysis
                         }
                         else
                         {
-                            throw new Exception("Asked to get type of node whose symbol doesn't exist\n   For name reference to " + ((NameReferenceNode)node).Name);
+                            analyser.AddWarning(new(
+                                level: Level.ERROR,
+                                source: Source.SEMANTIC_ANALYSIS,
+                                code: ErrorCode.UNKNOWN_SYMBOL,
+                                message: "unknown symbol '" + ((NameReferenceNode)node).Name + "'",
+                                file: file,
+                                rootCause: node.Token
+                            ));
+                            return "?";
                         }
                     }
                 case NodeType.NUMBER_INT:
@@ -172,6 +180,8 @@ namespace Marlin.SemanticAnalysis
             string currentScope = currentSymbolPath;
             currentSymbolPath += "." + node.Name;
 
+            node.Name = currentSymbolPath;
+
             string path = currentSymbolPath;
             SymbolData data = SymbolTable.GetSymbol(path, currentSymbolPath);
             if (data == null)
@@ -255,38 +265,58 @@ namespace Marlin.SemanticAnalysis
                         ));
                     }
 
+                    node.Name = data.fullName;
+
                     // Fix argument types
                     int i = 0;
                     foreach (var kvp in remoteArgs)
                     {
-                        string remoteType = SymbolTable.GetSymbol(kvp.Key.Name, currentSymbolPath).type;
+                        SymbolData smb = SymbolTable.GetSymbol(kvp.Key.Name, currentSymbolPath);
+                        string remoteType = smb.type;
+
+                        SymbolData varTypeData = SymbolTable.GetSymbol(remoteType);
+                        remoteType = varTypeData.fullName;
 
                         symbolTable.UpdateSymbol(kvp.Key.Name, new()
                         {
-                            fullName = data.fullName,
-                            name = data.name,
-                            nationality = data.nationality,
+                            fullName = smb.fullName,
+                            name = varTypeData.name,
+                            nationality = varTypeData.nationality,
                             type = remoteType,
-                            data = data.data
+                            data = varTypeData.data
                         }, node, analyser);
 
-                        if (localArgs[i] is NameReferenceNode nameRef)
+                        try
                         {
-                            if (nameRef.Name == "null")
+                            if (localArgs[i] is NameReferenceNode nameRef)
                             {
-                                continue;
+                                if (nameRef.Name == "null")
+                                {
+                                    continue;
+                                }
+                                else if (nameRef.Name == "void")
+                                {
+                                    analyser.AddWarning(new(
+                                        level: Level.ERROR,
+                                        source: Source.SEMANTIC_ANALYSIS,
+                                        code: ErrorCode.VOID_MISUSE,
+                                        message: "cannot use void in this context",
+                                        file: file,
+                                        rootCause: nameRef.Token
+                                    ));
+                                }
                             }
-                            else if (nameRef.Name == "void")
-                            {
-                                analyser.AddWarning(new(
-                                    level: Level.ERROR,
-                                    source: Source.SEMANTIC_ANALYSIS,
-                                    code: ErrorCode.VOID_MISUSE,
-                                    message: "cannot use void in this context",
-                                    file: file,
-                                    rootCause: nameRef.Token
-                                ));
-                            }
+                        } catch (Exception)
+                        {
+                            analyser.AddWarning(new(
+                                level: Level.ERROR,
+                                source: Source.SEMANTIC_ANALYSIS,
+                                code: ErrorCode.ARGUMENT_MISMATCH,
+                                message: "argument mismatch: expected " + remoteArgs.Count + " args, got " + localArgs.Count,
+                                file: file,
+                                rootCause: node.Token
+                            ));
+                            break;
                         }
 
                         string localType = SymbolTable.GetSymbol(localArgs[i].StringType, currentSymbolPath).fullName;
@@ -339,17 +369,26 @@ namespace Marlin.SemanticAnalysis
 
             return;
         }
-               
+
         public void VisitReturn(ReturnNode node)
         {
             string valueType = GetNodeType(node.Value);
+            SymbolData smb = SymbolTable.GetSymbol(valueType, currentSymbolPath);
+
+            if (smb == null)
+            {
+                return;
+            }
+
+            valueType = smb.type;
+
             if (currentFunctionSymbolData.type != valueType)
             {
                 analyser.AddWarning(new(
                     level: Level.ERROR,
                     source: Source.SEMANTIC_ANALYSIS,
                     code: ErrorCode.FUNC_RETURN_TYPE_MISMATCH,
-                    message: "return statement does not match the type of the function",
+                    message: "return statement does not match the type of the function - expected " + currentFunctionSymbolData.type + ", got " + valueType,
                     file: file,
                     rootCause: node.Token
                 ));

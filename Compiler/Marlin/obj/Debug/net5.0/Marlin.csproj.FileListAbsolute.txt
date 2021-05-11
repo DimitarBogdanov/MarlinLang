@@ -38,3 +38,7 @@ D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\runtimes\win\lib\netcoreapp3.0\Sy
 D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\TreeGenerator.dll
 D:\MarlinLang\Compiler\Marlin\obj\Debug\net5.0\Marlin.csproj.CopyComplete
 D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\LLVMSharp.dll
+D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\runtimes\linux-x64\native\libLLVM.so
+D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\runtimes\osx\native\libLLVM.dylib
+D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\runtimes\win-x64\native\libLLVM.dll
+D:\MarlinLang\Compiler\Marlin\bin\Debug\net5.0\runtimes\win-x86\native\libLLVM.dll

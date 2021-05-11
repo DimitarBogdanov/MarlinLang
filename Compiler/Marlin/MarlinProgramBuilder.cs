@@ -87,6 +87,7 @@ namespace Marlin
             Console.WriteLine("Building " + Program.SOURCE_DIR + " ...");
 
             Build(Program.SOURCE_DIR);
+            CodeGen();
 
             Console.WriteLine();
 
@@ -273,9 +274,28 @@ namespace Marlin
         }
         private static void CodeGen()
         {
+            //SymbolTable.Dump();
+
+            foreach (var status in fileStatuses)
+            {
+                if (status.Value.status != FileBuildStatus.AWAITING_CODE_GENERATION)
+                {
+                    return;
+                }
+            }
+
             Node rootNode = MergeTrees();
-            LLVMTarget target = new("test");
-            
+            Target target = new LLVMTarget("test");
+
+            try
+            {
+                target.BeginTranslation(rootNode);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("LLVM encountered an error: " + ex);
+                Console.WriteLine(ex.StackTrace);
+            }
         }
 
         private static void BuildDirectory(string path)
@@ -284,7 +304,6 @@ namespace Marlin
             foreach (string childPath in Directory.EnumerateFileSystemEntries(path))
             {
                 if (!Utils.FireOrDirExists(path)) continue;
-                Console.WriteLine("   Looking at " + childPath);
 
                 FileAttributes attributes = File.GetAttributes(childPath);
                 if (attributes.HasFlag(FileAttributes.Directory))

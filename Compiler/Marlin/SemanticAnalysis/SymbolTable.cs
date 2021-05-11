@@ -9,6 +9,7 @@
  */
 
 using Marlin.Parsing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Marlin.CompilerWarning;
@@ -220,6 +221,35 @@ namespace Marlin.SemanticAnalysis
                     scope = scope.Remove(lastDot, scope.Length - lastDot);
                 }
             }
+        }
+
+        public static void Dump()
+        {
+            Console.WriteLine();
+            Console.WriteLine("SYMBOL TABLE DUMP BEGIN");
+
+            // For padding
+            int longestKeyName = 5;
+            foreach (var kvp in symbols)
+            {
+                if (kvp.Key.Length > longestKeyName)
+                {
+                    longestKeyName = kvp.Key.Length;
+                }
+            }
+            longestKeyName += 4;
+
+            // Print
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
+            foreach (var kvp in symbols)
+            {
+                Console.WriteLine(kvp.Key + " ".PadRight(longestKeyName - kvp.Key.Length) + "-> " + (kvp.Value != null ? kvp.Value.ToString() : "null"));
+            }
+
+            Console.WriteLine("SYMBOL TABLE DUMP END");
         }
 
         private static KeyValuePair<string, SymbolData>[] GetSymbolChildren(string path)

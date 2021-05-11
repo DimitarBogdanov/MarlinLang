@@ -1,5 +1,10 @@
 class Test {
+	func int test(int a) {
+		return a;
+	}
+
 	func int main() {
-		return 0;
+		test(5);
+		return 15;
 	}
 }

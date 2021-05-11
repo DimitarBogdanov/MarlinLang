@@ -586,11 +586,8 @@ namespace Marlin.Parsing
             {
                 // Acceptable: function call, variable declaration and assignment
 
-                // Function call
-                
-
                 // Variable declaration or function call
-                if (stream.Peek().type == TokenType.DOT || stream.Peek().type == TokenType.IDENTIFIER)
+                if (stream.Peek().type == TokenType.DOT || stream.Peek().type == TokenType.IDENTIFIER || stream.Peek().type == TokenType.PAREN_LEFT)
                 {
                     while (stream.Peek().type == TokenType.DOT)
                     {
@@ -615,6 +612,7 @@ namespace Marlin.Parsing
 
                     if (stream.Peek().type == TokenType.IDENTIFIER)
                     {
+                        // Var declare
                         Token nameToken = stream.Next();
                     
                         if (stream.Peek().type == TokenType.SET)
@@ -662,6 +660,7 @@ namespace Marlin.Parsing
                     }
                     else if (stream.Peek().type == TokenType.PAREN_LEFT)
                     {
+                        // Func call
                         // Collect arguments
                         List<Node> args = new();
                         // Opening paren
