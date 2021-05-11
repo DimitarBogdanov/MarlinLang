@@ -285,7 +285,7 @@ namespace Marlin
             }
 
             Node rootNode = MergeTrees();
-            Target target = new LLVMTarget("test");
+            Target target = new LLVMSharpTarget("test");
 
             try
             {

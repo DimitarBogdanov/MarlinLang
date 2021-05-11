@@ -6,7 +6,7 @@ using Marlin.Parsing;
 
 namespace Marlin.CodeGen
 {
-    public unsafe class LLVMTarget : Target
+    public unsafe class LLVMSharpTarget : Target
     {
         private readonly LLVMModuleRef module;
         private readonly LLVMBuilderRef builder;
@@ -16,7 +16,7 @@ namespace Marlin.CodeGen
 
         private string currentSymbolPath = "__global__";
 
-        public LLVMTarget(string name)
+        public LLVMSharpTarget(string name)
         {
             module = LLVM.ModuleCreateWithName(name);
             builder = LLVM.CreateBuilder();
