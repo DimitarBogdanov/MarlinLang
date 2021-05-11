@@ -293,7 +293,7 @@ namespace Marlin
             }
             catch (Exception ex)
             {
-                Console.WriteLine("LLVM encountered an error: " + ex);
+                Console.WriteLine("Target encountered an error: " + ex);
                 Console.WriteLine(ex.StackTrace);
             }
         }
