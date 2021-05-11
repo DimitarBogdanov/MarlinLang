@@ -68,9 +68,12 @@ namespace Marlin.SemanticAnalysis
                 case NodeType.BOOLEAN:
                     VisitBoolean((BooleanNode)node);
                     break;
+                case NodeType.RETURN_STATEMENT:
+                    VisitReturn((ReturnNode)node);
+                    break;
                 default:
-                    throw new NotImplementedException();
-            };
+                    throw new NotImplementedException(node.Type.ToString());
+            }
         }
 
         public void VisitBlock(Node node)
@@ -79,12 +82,16 @@ namespace Marlin.SemanticAnalysis
             {
                 Visit(child);
             }
+
+            return;
         }
 
         public void VisitBinaryOperator(BinaryOperatorNode node)
         {
             Visit(node.Left);
             Visit(node.Right);
+
+            return;
         }
 
         public void VisitClassTemplate(ClassTemplateNode node)
@@ -103,6 +110,8 @@ namespace Marlin.SemanticAnalysis
 
             VisitBlock(node);
             currentSymbolPath = currentScope;
+
+            return;
         }
 
         public void VisitFunc(FuncNode node)
@@ -142,6 +151,8 @@ namespace Marlin.SemanticAnalysis
             // Function members
             VisitBlock(node);
             currentSymbolPath = currentScope;
+
+            return;
         }
 
         public void VisitVarDeclare(VarDeclareNode node)
@@ -154,6 +165,8 @@ namespace Marlin.SemanticAnalysis
                 type = node.VarType,
                 data = new()
             }, node, analyser);
+
+            return;
         }
 
         #region Empty (no pass 1 importance)
@@ -188,6 +201,11 @@ namespace Marlin.SemanticAnalysis
         }
 
         public void VisitVarAssign(VarAssignNode node)
+        {
+            return; // No need for pass 1
+        }
+
+        public void VisitReturn(ReturnNode node)
         {
             return; // No need for pass 1
         }

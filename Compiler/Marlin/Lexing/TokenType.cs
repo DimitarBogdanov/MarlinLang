@@ -52,5 +52,6 @@ namespace Marlin.Lexing
 
         CLASS,          // class
         FUNCTION,       // function
+        RETURN,         // return
     }
 }

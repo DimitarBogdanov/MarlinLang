@@ -8,6 +8,8 @@
  * https://creativecommons.org/licenses/by-nd/3.0/
  */
 
+using LLVMSharp.Interop;
+using Marlin.CodeGen;
 using Marlin.Lexing;
 using System;
 using System.Collections.Generic;
@@ -23,6 +25,7 @@ namespace Marlin.Parsing
         CLASS_TEMPLATE,
         VARIABLE_ASSIGNMENT,
         VARIABLE_DECLARATION,
+        RETURN_STATEMENT,
         NAME_REFERENCE,
         NUMBER_INT,
         NUMBER_DBL,
@@ -233,10 +236,10 @@ namespace Marlin.Parsing
 
     public class VarAssignNode : Node
     {
-        public string Name { get; private set; }
+        public NameReferenceNode Name { get; private set; }
         public Node Value { get; private set; }
 
-        public VarAssignNode(string name, Node value, Token token) : base(token)
+        public VarAssignNode(NameReferenceNode name, Node value, Token token) : base(token)
         {
             Name = name;
             Value = value;
@@ -254,6 +257,30 @@ namespace Marlin.Parsing
         public override void Accept(IVisitor visitor)
         {
             visitor.VisitVarAssign(this);
+        }
+    }
+
+    public class ReturnNode : Node
+    {
+        public Node Value { get; private set; }
+
+        public ReturnNode(Node value, Token token) : base(token)
+        {
+            Value = value;
+            Children.Add(value);
+
+            StringType = value.StringType;
+            Type = NodeType.RETURN_STATEMENT;
+        }
+
+        public override string ToString()
+        {
+            return "Return<" + StringType + ">";
+        }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitReturn(this);
         }
     }
 

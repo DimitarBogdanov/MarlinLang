@@ -22,6 +22,7 @@ namespace Marlin.Parsing
         public void VisitClassTemplate(ClassTemplateNode node);
         public void VisitNameReference(NameReferenceNode node);
         public void VisitVarAssign(VarAssignNode node);
+        public void VisitReturn(ReturnNode node);
         public void VisitVarDeclare(VarDeclareNode node);
         public void VisitString(StringNode node);
         public void VisitBoolean(BooleanNode node);

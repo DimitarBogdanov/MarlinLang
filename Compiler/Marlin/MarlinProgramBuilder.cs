@@ -8,6 +8,7 @@
  * https://creativecommons.org/licenses/by-nd/3.0/
  */
 
+using Marlin.CodeGen;
 using Marlin.Lexing;
 using Marlin.Optimisation;
 using Marlin.Parsing;
@@ -54,8 +55,30 @@ namespace Marlin
             }
         }
 
-        private static readonly Dictionary<string, FileBuild> fileStatuses = new();
-        private static readonly List<string> fileList = new();
+        private static Dictionary<string, FileBuild> fileStatuses = new();
+        private static List<string> fileList = new();
+
+        private static Node MergeTrees()
+        {
+            if (fileStatuses.Count == 0)
+            {
+                return null;
+            }
+
+            Node newMainNode = fileStatuses.First().Value.rootNode;
+
+            for (int i = 1; i < fileStatuses.Count; i++)
+            {
+                foreach (Node childNode in fileStatuses.Values.ToArray()[i].rootNode.Children)
+                {
+                    newMainNode.AddChild(childNode);
+                }
+            }
+
+            fileStatuses = null; // We don't need to clog up all of this ram!
+
+            return newMainNode;
+        }
 
         public static void Build()
         {
@@ -99,7 +122,7 @@ namespace Marlin
             {
                 Console.WriteLine("    Of which...");
                 Console.WriteLine("    Lexing: " + MarlinTokenizer.totalTokenizationTime + " ms");
-                Console.WriteLine("    Parsing: " + MarlinParser.totalParseTime + " ms");
+                Console.WriteLine("    Parsing: " + MarlinParser.TotalParseTime + " ms");
                 Console.WriteLine("    Semantic analysis:");
                 Console.WriteLine("        Pass 1: " + MarlinSemanticAnalyser.PassOneTookMs + " ms");
                 Console.WriteLine("        Pass 2: " + MarlinSemanticAnalyser.PassTwoTookMs + " ms");
@@ -244,6 +267,15 @@ namespace Marlin
                     }
                 }
             }
+
+            // Stop! Clogging! Up! Ram!
+            fileList = null;
+        }
+        private static void CodeGen()
+        {
+            Node rootNode = MergeTrees();
+            LLVMTarget target = new("test");
+            
         }
 
         private static void BuildDirectory(string path)

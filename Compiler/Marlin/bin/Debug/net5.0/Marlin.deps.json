@@ -8,70 +8,83 @@
     ".NETCoreApp,Version=v5.0": {
       "Marlin/0.0.1": {
         "dependencies": {
+          "LLVMSharp": "11.0.0-beta",
           "System.Collections": "4.3.0",
-          "System.Drawing.Common": "6.0.0-preview.1.21102.12",
+          "System.Drawing.Common": "5.0.2",
           "TreeGenerator": "1.0.0.0"
         },
         "runtime": {
           "Marlin.dll": {}
         }
       },
-      "Microsoft.NETCore.Platforms/6.0.0-preview.1.21102.12": {},
-      "Microsoft.NETCore.Targets/1.1.0": {},
-      "Microsoft.Win32.SystemEvents/6.0.0-preview.1.21102.12": {
+      "libLLVM/11.0.0": {},
+      "LLVMSharp/11.0.0-beta": {
         "dependencies": {
-          "Microsoft.NETCore.Platforms": "6.0.0-preview.1.21102.12"
+          "libLLVM": "11.0.0"
+        },
+        "runtime": {
+          "lib/net5.0/LLVMSharp.dll": {
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "11.0.0.0"
+          }
+        }
+      },
+      "Microsoft.NETCore.Platforms/5.0.0": {},
+      "Microsoft.NETCore.Targets/1.1.0": {},
+      "Microsoft.Win32.SystemEvents/5.0.0": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "5.0.0"
         },
         "runtime": {
           "lib/netstandard2.0/Microsoft.Win32.SystemEvents.dll": {
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.21.10212"
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.51904"
           }
         },
         "runtimeTargets": {
           "runtimes/win/lib/netcoreapp3.0/Microsoft.Win32.SystemEvents.dll": {
             "rid": "win",
             "assetType": "runtime",
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.21.10212"
+            "assemblyVersion": "5.0.0.0",
+            "fileVersion": "5.0.20.51904"
           }
         }
       },
       "System.Collections/4.3.0": {
         "dependencies": {
-          "Microsoft.NETCore.Platforms": "6.0.0-preview.1.21102.12",
+          "Microsoft.NETCore.Platforms": "5.0.0",
           "Microsoft.NETCore.Targets": "1.1.0",
           "System.Runtime": "4.3.0"
         }
       },
-      "System.Drawing.Common/6.0.0-preview.1.21102.12": {
+      "System.Drawing.Common/5.0.2": {
         "dependencies": {
-          "Microsoft.Win32.SystemEvents": "6.0.0-preview.1.21102.12"
+          "Microsoft.Win32.SystemEvents": "5.0.0"
         },
         "runtime": {
           "lib/netcoreapp3.0/System.Drawing.Common.dll": {
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.21.10212"
+            "assemblyVersion": "5.0.0.2",
+            "fileVersion": "5.0.421.11614"
           }
         },
         "runtimeTargets": {
           "runtimes/unix/lib/netcoreapp3.0/System.Drawing.Common.dll": {
             "rid": "unix",
             "assetType": "runtime",
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.21.10212"
+            "assemblyVersion": "5.0.0.2",
+            "fileVersion": "5.0.421.11614"
           },
           "runtimes/win/lib/netcoreapp3.0/System.Drawing.Common.dll": {
             "rid": "win",
             "assetType": "runtime",
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.0.21.10212"
+            "assemblyVersion": "5.0.0.2",
+            "fileVersion": "5.0.421.11614"
           }
         }
       },
       "System.Runtime/4.3.0": {
         "dependencies": {
-          "Microsoft.NETCore.Platforms": "6.0.0-preview.1.21102.12",
+          "Microsoft.NETCore.Platforms": "5.0.0",
           "Microsoft.NETCore.Targets": "1.1.0"
         }
       },
@@ -91,12 +104,26 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Microsoft.NETCore.Platforms/6.0.0-preview.1.21102.12": {
+    "libLLVM/11.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-mdF/p3nqdGOOzMGSiO1nf6M0/LmJziyfDW1H16TYwZvj++4+bC4VzH7BEUyX8IjcXJCxvO2uTfym/ZeNJVGthA==",
-      "path": "microsoft.netcore.platforms/6.0.0-preview.1.21102.12",
-      "hashPath": "microsoft.netcore.platforms.6.0.0-preview.1.21102.12.nupkg.sha512"
+      "sha512": "sha512-nXWU4Vm1SYD8HHgsUQpgXk4bklfWo+TpA0YLst11Mr5B3p9ivdPBKeFhstCZdEu25uZS8AgIFo4voRSFJDrTRQ==",
+      "path": "libllvm/11.0.0",
+      "hashPath": "libllvm.11.0.0.nupkg.sha512"
+    },
+    "LLVMSharp/11.0.0-beta": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-gLukaJvuwjmpQcWLvhTkDNZrt1r/dkPXEraSEhfZJqC9m5s4i+l8tBLdrXraaOH74h7MqGRp72rqyr8aYG4Q8A==",
+      "path": "llvmsharp/11.0.0-beta",
+      "hashPath": "llvmsharp.11.0.0-beta.nupkg.sha512"
+    },
+    "Microsoft.NETCore.Platforms/5.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-VyPlqzH2wavqquTcYpkIIAQ6WdenuKoFN0BdYBbCWsclXacSOHNQn66Gt4z5NBqEYW0FAPm5rlvki9ZiCij5xQ==",
+      "path": "microsoft.netcore.platforms/5.0.0",
+      "hashPath": "microsoft.netcore.platforms.5.0.0.nupkg.sha512"
     },
     "Microsoft.NETCore.Targets/1.1.0": {
       "type": "package",
@@ -105,12 +132,12 @@
       "path": "microsoft.netcore.targets/1.1.0",
       "hashPath": "microsoft.netcore.targets.1.1.0.nupkg.sha512"
     },
-    "Microsoft.Win32.SystemEvents/6.0.0-preview.1.21102.12": {
+    "Microsoft.Win32.SystemEvents/5.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-gzLO6zNVtBMevH3EPLObUUL6g3hW3pSgqskSQvayoru48gMkEVUmfCNCvcQD8sET8B/VwWABsDYEFpq58JJ4GA==",
-      "path": "microsoft.win32.systemevents/6.0.0-preview.1.21102.12",
-      "hashPath": "microsoft.win32.systemevents.6.0.0-preview.1.21102.12.nupkg.sha512"
+      "sha512": "sha512-Bh6blKG8VAKvXiLe2L+sEsn62nc1Ij34MrNxepD2OCrS5cpCwQa9MeLyhVQPQ/R4Wlzwuy6wMK8hLb11QPDRsQ==",
+      "path": "microsoft.win32.systemevents/5.0.0",
+      "hashPath": "microsoft.win32.systemevents.5.0.0.nupkg.sha512"
     },
     "System.Collections/4.3.0": {
       "type": "package",
@@ -119,12 +146,12 @@
       "path": "system.collections/4.3.0",
       "hashPath": "system.collections.4.3.0.nupkg.sha512"
     },
-    "System.Drawing.Common/6.0.0-preview.1.21102.12": {
+    "System.Drawing.Common/5.0.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-VfxLOd9L442ax5pxvMfqhQb5lS8/Z2j7zwJWAhAWtsgIyKlveV82RA9GbEJ2q8xq3s3sYyyoXgWGlyVKjBv1hw==",
-      "path": "system.drawing.common/6.0.0-preview.1.21102.12",
-      "hashPath": "system.drawing.common.6.0.0-preview.1.21102.12.nupkg.sha512"
+      "sha512": "sha512-rvr/M1WPf24ljpvvrVd74+NdjRUJu1bBkspkZcnzSZnmAUQWSvanlQ0k/hVHk+cHufZbZfu7vOh/vYc0q5Uu/A==",
+      "path": "system.drawing.common/5.0.2",
+      "hashPath": "system.drawing.common.5.0.2.nupkg.sha512"
     },
     "System.Runtime/4.3.0": {
       "type": "package",

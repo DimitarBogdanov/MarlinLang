@@ -13,6 +13,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Text;
 using TreeGenerator;
 
 namespace Marlin
@@ -51,6 +52,12 @@ namespace Marlin
                 File.Delete(path);
             }
             catch (Exception) { }
+        }
+
+        public unsafe static sbyte* UnsafeStringToSByte(string str)
+        {
+            fixed (byte* p = Encoding.UTF8.GetBytes(str))
+                return (sbyte*)p;
         }
 
         private static void AddChildrenRecursively(Node node, Node parent, TreeData.TreeDataTableDataTable table)

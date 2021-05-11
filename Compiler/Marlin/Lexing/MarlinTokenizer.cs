@@ -471,6 +471,7 @@ namespace Marlin.Lexing
                 
                 "class"      =>  TokenType.CLASS,
                 "func"       =>  TokenType.FUNCTION,
+                "return"     =>  TokenType.RETURN,
 
                 _            =>  TokenType.IDENTIFIER,
             };

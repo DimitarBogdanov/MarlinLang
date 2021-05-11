@@ -53,6 +53,8 @@ namespace Marlin
             public const string VARIABLE_USED_BEFORE_DECLARATION = "MAR0023";
             public const string ARGUMENT_MISMATCH = "MAR0024";
             public const string VOID_MISUSE = "MAR0025";
+            public const string FUNC_RETURN_TYPE_MISMATCH = "MAR0026";
+            public const string VARASSIGN_TYPE_MISMATCH = "MAR0027";
         }
 
         public Level WarningLevel { get; private set; }

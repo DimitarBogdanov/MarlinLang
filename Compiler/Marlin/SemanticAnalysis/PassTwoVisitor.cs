@@ -24,12 +24,71 @@ namespace Marlin.SemanticAnalysis
         private readonly string file = "";
         
         private string currentSymbolPath = "__global__";
+        private SymbolData currentFunctionSymbolData = null;
 
         public PassTwoVisitor(SymbolTable symbolTable, MarlinSemanticAnalyser analyser, string file)
         {
             this.symbolTable = symbolTable;
             this.analyser = analyser;
             this.file = file;
+        }
+
+        private string GetNodeType(Node node)
+        {
+            switch (node.Type)
+            {
+                case NodeType.BINARY_OPERATOR:
+                    return GetNodeType(((BinaryOperatorNode)node).Left);
+
+                case NodeType.FUNCTION_CALL:
+                    {
+                        SymbolData data = SymbolTable.GetSymbol(((FuncCallNode)node).Name, currentSymbolPath);
+                        if (data != null)
+                        {
+                            return data.type;
+                        }
+                        else
+                        {
+                            throw new Exception("Asked to get type of node whose symbol doesn't exist");
+                        }
+                    }
+
+                case NodeType.CLASS_TEMPLATE:
+                    {
+                        SymbolData data = SymbolTable.GetSymbol(((ClassTemplateNode)node).Name, currentSymbolPath);
+                        if (data != null)
+                        {
+                            return data.type;
+                        }
+                        else
+                        {
+                            throw new Exception("Asked to get type of node whose symbol doesn't exist");
+                        }
+                    }
+                case NodeType.NAME_REFERENCE:
+                    {
+                        SymbolData data = SymbolTable.GetSymbol(((NameReferenceNode)node).Name, currentSymbolPath);
+                        if (data != null)
+                        {
+                            return data.type;
+                        }
+                        else
+                        {
+                            throw new Exception("Asked to get type of node whose symbol doesn't exist\n   For name reference to " + ((NameReferenceNode)node).Name);
+                        }
+                    }
+                case NodeType.NUMBER_INT:
+                    return "marlin.Int";
+                case NodeType.NUMBER_DBL:
+                    return "marlin.Double";
+                case NodeType.STRING:
+                    return "marlin.String";
+                case NodeType.BOOLEAN:
+                    return "marlin.Boolean";
+
+                default:
+                    throw new Exception("Asked to get type of " + node.Type);
+            }
         }
 
         public void Visit(Node node)
@@ -72,34 +131,42 @@ namespace Marlin.SemanticAnalysis
                 case NodeType.BOOLEAN:
                     VisitBoolean((BooleanNode)node);
                     break;
+                case NodeType.RETURN_STATEMENT:
+                    VisitReturn((ReturnNode)node);
+                    break;
                 default:
-                    throw new NotImplementedException();
-            };
+                    throw new NotImplementedException(node.Type.ToString());
+            }
         }
-
         public void VisitBlock(Node node)
         {
             foreach (Node child in node.Children)
             {
                 Visit(child);
             }
-        }
 
+            return;
+        }
+               
         public void VisitBinaryOperator(BinaryOperatorNode node)
         {
             // Just in case
             Visit(node.Left);
             Visit(node.Right);
-        }
 
+            return;
+        }
+               
         public void VisitClassTemplate(ClassTemplateNode node)
         {
             string currentScope = currentSymbolPath;
             currentSymbolPath += "." + node.Name;
             VisitBlock(node);
             currentSymbolPath = currentScope;
-        }
 
+            return;
+        }
+               
         public void VisitFunc(FuncNode node)
         {
             string currentScope = currentSymbolPath;
@@ -128,10 +195,18 @@ namespace Marlin.SemanticAnalysis
                 data = data.data
             }, node, analyser);
 
-            VisitBlock(node);
-            currentSymbolPath = currentScope;
-        }
+            SymbolData oldFuncSD = currentFunctionSymbolData;
+            currentFunctionSymbolData = SymbolTable.GetSymbol(path, currentSymbolPath);
 
+            VisitBlock(node);
+
+            currentFunctionSymbolData = oldFuncSD;
+
+            currentSymbolPath = currentScope;
+
+            return;
+        }
+               
         public void VisitVarDeclare(VarDeclareNode node)
         {
             // Check var type
@@ -153,8 +228,10 @@ namespace Marlin.SemanticAnalysis
                 type = typeData.type,
                 data = data.data
             }, node, analyser);
-        }
 
+            return;
+        }
+               
         public void VisitFuncCall(FuncCallNode node)
         {
             if (!node.Name.Contains('.'))
@@ -259,36 +336,82 @@ namespace Marlin.SemanticAnalysis
                     }
                 }
             }
-        }
 
+            return;
+        }
+               
+        public void VisitReturn(ReturnNode node)
+        {
+            string valueType = GetNodeType(node.Value);
+            if (currentFunctionSymbolData.type != valueType)
+            {
+                analyser.AddWarning(new(
+                    level: Level.ERROR,
+                    source: Source.SEMANTIC_ANALYSIS,
+                    code: ErrorCode.FUNC_RETURN_TYPE_MISMATCH,
+                    message: "return statement does not match the type of the function",
+                    file: file,
+                    rootCause: node.Token
+                ));
+            }
+
+            return;
+        }
+               
+        public void VisitVarAssign(VarAssignNode node)
+        {
+            string variableType = GetNodeType(node.Name);
+            string valueType = GetNodeType(node.Value);
+            if (variableType != valueType)
+            {
+                analyser.AddWarning(new(
+                    level: Level.ERROR,
+                    source: Source.SEMANTIC_ANALYSIS,
+                    code: ErrorCode.VARASSIGN_TYPE_MISMATCH,
+                    message: "value type doesn't match variable type",
+                    file: file,
+                    rootCause: node.Token
+                ));
+            }
+
+            return;
+        }
+               
+        public void VisitNameReference(NameReferenceNode node)
+        {
+            if (!SymbolTable.ContainsSymbol(node.Name, currentSymbolPath))
+            {
+                analyser.AddWarning(new(
+                    level: Level.ERROR,
+                    source: Source.SEMANTIC_ANALYSIS,
+                    code: ErrorCode.UNKNOWN_SYMBOL,
+                    message: "unknown symbol '" + node.Name + "'",
+                    file: file,
+                    rootCause: node.Token
+                ));
+            }
+
+            return;
+        }
+               
         public void VisitBoolean(BooleanNode node)
         {
             return; // No need for pass 2
         }
-
+               
         public void VisitDouble(NumberDoubleNode node)
         {
             return; // No need for pass 2
         }
-
+               
         public void VisitInteger(NumberIntegerNode node)
         {
             return; // No need for pass 2
         }
-
-        public void VisitNameReference(NameReferenceNode node)
-        {
-            // TODO
-        }
-
+               
         public void VisitString(StringNode node)
         {
             return; // No need for pass 2
-        }
-
-        public void VisitVarAssign(VarAssignNode node)
-        {
-            // TODO
         }
     }
 }

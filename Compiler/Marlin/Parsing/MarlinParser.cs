@@ -21,7 +21,9 @@ namespace Marlin.Parsing
         private readonly TokenStream stream;
         private readonly string file;
         public List<CompilerWarning> warnings = new();
-        public static long totalParseTime = 0;
+        private static long totalParseTime = 0;
+
+        public static long TotalParseTime { get => totalParseTime; set => totalParseTime = value; }
 
         public MarlinParser(TokenStream stream, string file)
         {
@@ -102,7 +104,7 @@ namespace Marlin.Parsing
                     rootNode.AddChild(scope);
             }
 
-            totalParseTime += (Utils.CurrentTimeMillis() - start);
+            TotalParseTime += (Utils.CurrentTimeMillis() - start);
             return rootNode;
         }
 
@@ -444,7 +446,9 @@ namespace Marlin.Parsing
             // Statements in Marlin:
             // 1. Function calls
             // 2. Variable assignment
-            // 3. ;
+            // 3. Return statements
+            // 4. if, while, for statements [TODO]
+            // 5. ;
             switch (stream.Peek().type)
             {
                 case TokenType.IDENTIFIER:
@@ -454,6 +458,8 @@ namespace Marlin.Parsing
                 case TokenType.SEMICOLON:
                     stream.Next();
                     return null;
+                case TokenType.RETURN:
+                    return ExpectReturn();
                 default:
                     warnings.Add(new(
                         level: Level.ERROR,
@@ -788,7 +794,7 @@ namespace Marlin.Parsing
                         ));
                     }
 
-                    return new VarAssignNode(identifier.value, value, identifier);
+                    return new VarAssignNode(new NameReferenceNode(identifier.value, identifier), value, identifier);
                 }
 
                 // We haven't returned yet! This is not supported
@@ -887,6 +893,12 @@ namespace Marlin.Parsing
                 // Variable reference
                 return new NameReferenceNode(identifier.value, identifier);
             }
+        }
+
+        private Node ExpectReturn()
+        {
+            stream.Next(); // consume 'return'
+            return new ReturnNode(ExpectExpression(), stream.Peek());
         }
 
         private Node ExpectInteger()

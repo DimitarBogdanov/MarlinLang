@@ -1,5 +1,5 @@
 class Test {
-	func void main() {
-		
+	func int main() {
+		return 0;
 	}
 }
