@@ -86,13 +86,13 @@ namespace Marlin.SemanticAnalysis
                         }
                     }
                 case NodeType.NUMBER_INT:
-                    return "marlin.Int";
+                    return "marlin::Int";
                 case NodeType.NUMBER_DBL:
-                    return "marlin.Double";
+                    return "marlin::Double";
                 case NodeType.STRING:
-                    return "marlin.String";
+                    return "marlin::String";
                 case NodeType.BOOLEAN:
-                    return "marlin.Boolean";
+                    return "marlin::Boolean";
 
                 default:
                     throw new Exception("Asked to get type of " + node.Type);

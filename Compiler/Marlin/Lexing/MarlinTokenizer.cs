@@ -244,8 +244,20 @@ namespace Marlin.Lexing
                             tokens.Add(new(TokenType.COMMA, ",", line, col));
                             continue;
                         case ':':
-                            tokens.Add(new(TokenType.COLON, ":", line, col));
-                            continue;
+                            {
+                                if (reader.Peek() == ':')
+                                {
+                                    reader.Read();
+                                    tokens.Add(new(TokenType.DOUBLE_COLON, "::", line, col));
+                                    continue;
+                                }
+                                else
+                                {
+
+                                    tokens.Add(new(TokenType.COLON, ":", line, col));
+                                    continue;
+                                }
+                            }
                         case ';':
                             tokens.Add(new(TokenType.SEMICOLON, ";", line, col));
                             continue;

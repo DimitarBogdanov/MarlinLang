@@ -35,6 +35,7 @@ namespace Marlin.Lexing
         DOT,            // .
         COMMA,          // ,
         COLON,          // :
+        DOUBLE_COLON,   // ::
         SEMICOLON,      // ;
 
         BANG,           // !

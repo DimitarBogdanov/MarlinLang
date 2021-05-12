@@ -51,9 +51,10 @@ namespace Marlin
         {
             get
             {
-                return allWarnings.Any(x => x.WarningLevel == Level.ERROR);
+                return CodeGenFailed || allWarnings.Any(x => x.WarningLevel == Level.ERROR);
             }
         }
+        private static bool CodeGenFailed { get; set; } = false;
 
         private static Dictionary<string, FileBuild> fileStatuses = new();
         private static List<string> fileList = new();
@@ -121,13 +122,14 @@ namespace Marlin
             Console.WriteLine($"Build completed in {((endTime - startTime) / 1000.0).ToString().Replace(',', '.')} sec: " + (BuildFailed ? "FAILED" : "SUCCESSFUL"));
             if (Program.DEBUG_MODE)
             {
-                Console.WriteLine("    Of which...");
-                Console.WriteLine("    Lexing: " + MarlinTokenizer.totalTokenizationTime + " ms");
-                Console.WriteLine("    Parsing: " + MarlinParser.TotalParseTime + " ms");
-                Console.WriteLine("    Semantic analysis:");
-                Console.WriteLine("        Pass 1: " + MarlinSemanticAnalyser.PassOneTookMs + " ms");
-                Console.WriteLine("        Pass 2: " + MarlinSemanticAnalyser.PassTwoTookMs + " ms");
-                Console.WriteLine("    Code optimisation: " + MarlinCodeOptimiser.optimisationTime + " ms");
+                Console.WriteLine("   Of which...");
+                Console.WriteLine("    Lexing:              " + MarlinTokenizer.totalTokenizationTime + " ms");
+                Console.WriteLine("    Parsing:             " + MarlinParser.TotalParseTime + " ms");
+                Console.WriteLine("    Semantic analysis:   ");
+                Console.WriteLine("        Pass 1:          " + MarlinSemanticAnalyser.PassOneTookMs + " ms");
+                Console.WriteLine("        Pass 2:          " + MarlinSemanticAnalyser.PassTwoTookMs + " ms");
+                Console.WriteLine("    Code optimisation:   " + MarlinCodeOptimiser.optimisationTime + " ms");
+                Console.WriteLine("    Code generation:     " + Target.TotalCodeGenTime + " ms");
             }
         }
 
@@ -285,7 +287,14 @@ namespace Marlin
             }
 
             Node rootNode = MergeTrees();
-            Target target = new LLVMSharpTarget("test");
+            Target target;
+
+            if (Program.TARGET == "LLVM")
+                target = new LLVMSharpTarget(Program.MODULE_NAME);
+            else if (Program.TARGET == "CLI")
+                target = new CLITarget();
+            else
+                throw new Exception("Invalid target");
 
             try
             {
@@ -293,8 +302,14 @@ namespace Marlin
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Target encountered an error: " + ex);
+                CodeGenFailed = true;
+                ConsoleColor prev = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("[This is a compiler bug. Please open an issue.]");
+                Console.WriteLine("Target encountered an error: " + ex.Message);
                 Console.WriteLine(ex.StackTrace);
+                Console.WriteLine();
+                Console.ForegroundColor = prev;
             }
         }
 

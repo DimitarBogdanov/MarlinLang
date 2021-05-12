@@ -41,7 +41,7 @@ namespace Marlin.SemanticAnalysis
                 fullName = "string",
                 name = "string",
                 nationality = SymbolNationality.TYPE_REF,
-                type = "marlin.String",
+                type = "marlin::String",
                 data = new()
             });
 
@@ -50,7 +50,7 @@ namespace Marlin.SemanticAnalysis
                 fullName = "int",
                 name = "int",
                 nationality = SymbolNationality.TYPE_REF,
-                type = "marlin.Int",
+                type = "marlin::Int",
                 data = new()
             });
 
@@ -59,7 +59,7 @@ namespace Marlin.SemanticAnalysis
                 fullName = "boolean",
                 name = "boolean",
                 nationality = SymbolNationality.TYPE_REF,
-                type = "marlin.Boolean",
+                type = "marlin::Boolean",
                 data = new()
             });
 
@@ -67,30 +67,39 @@ namespace Marlin.SemanticAnalysis
 
             #region stdlib
 
+            symbols.Add("marlin", new()
+            {
+                fullName = "marlin",
+                name = "String",
+                nationality = SymbolNationality.NAMESPACE,
+                type = "!",
+                data = new()
+            });
+            
             symbols.Add("marlin.String", new()
             {
-                fullName = "marlin.String",
+                fullName = "marlin::String",
                 name = "String",
                 nationality = SymbolNationality.CLASS,
-                type = "marlin.String",
+                type = "marlin::String",
                 data = new()
             });
 
-            symbols.Add("marlin.Int", new()
+            symbols.Add("marlin::Int", new()
             {
-                fullName = "marlin.Int",
+                fullName = "marlin::Int",
                 name = "Int",
                 nationality = SymbolNationality.CLASS,
-                type = "marlin.Int",
+                type = "marlin::Int",
                 data = new()
             });
 
-            symbols.Add("marlin.Boolean", new()
+            symbols.Add("marlin::Boolean", new()
             {
-                fullName = "marlin.Boolean",
+                fullName = "marlin::Boolean",
                 name = "Boolean",
                 nationality = SymbolNationality.CLASS,
-                type = "marlin.Boolean",
+                type = "marlin::Boolean",
                 data = new()
             });
 
@@ -277,6 +286,7 @@ namespace Marlin.SemanticAnalysis
         {
             SPECIAL,
             VARIABLE,
+            NAMESPACE,
             CLASS,
             ENUM,
             FUNC,

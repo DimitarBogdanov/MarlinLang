@@ -4,6 +4,8 @@ namespace Marlin.CodeGen
 {
     public abstract unsafe class Target : IVisitor
     {
+        public static long TotalCodeGenTime { get; protected set; } = 0;
+
         public abstract void BeginTranslation(Node ast);
 
         public virtual void Visit(Node node)

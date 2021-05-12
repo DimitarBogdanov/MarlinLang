@@ -597,6 +597,10 @@ namespace Marlin.Parsing
                         {
                             identifier = new Token(TokenType.IDENTIFIER, identifier.value + "." + nextToken.value, identifier.line, identifier.col);
                         }
+                        else if (nextToken.type == TokenType.DOUBLE_COLON)
+                        {
+                            identifier = new Token(TokenType.IDENTIFIER, identifier.value + "::" + nextToken.value, identifier.line, identifier.col);
+                        }
                         else
                         {
                             warnings.Add(new(

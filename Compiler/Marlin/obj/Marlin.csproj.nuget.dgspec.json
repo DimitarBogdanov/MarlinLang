@@ -51,6 +51,10 @@
             "System.Drawing.Common": {
               "target": "Package",
               "version": "[5.0.2, )"
+            },
+            "System.Reflection.Emit.ILGeneration": {
+              "target": "Package",
+              "version": "[4.7.0, )"
             }
           },
           "imports": [

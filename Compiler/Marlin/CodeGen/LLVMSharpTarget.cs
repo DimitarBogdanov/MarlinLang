@@ -39,6 +39,8 @@ namespace Marlin.CodeGen
 
         public override void BeginTranslation(Node ast)
         {
+            long start = Utils.CurrentTimeMillis();
+
             // Define globals from the symbol table in here
 
             // Generate code
@@ -50,7 +52,10 @@ namespace Marlin.CodeGen
             string path = Program.SOURCE_DIR + "\\out\\dump.ll";
             File.Create(path).Close();
             LLVM.PrintModuleToFile(module, path, out string err);
-            Console.WriteLine(err);
+            if (err != "")
+                Console.WriteLine(err);
+
+            TotalCodeGenTime += Utils.CurrentTimeMillis() - start;
         }
 
         #region Visitor
@@ -91,7 +96,7 @@ namespace Marlin.CodeGen
 
         public override void VisitBoolean(BooleanNode node)
         {
-            throw new NotImplementedException();
+            //return new LLVMBool(node.Value ? 1 : 0);
         }
 
         public override void VisitClassTemplate(ClassTemplateNode node)
@@ -203,7 +208,7 @@ namespace Marlin.CodeGen
 
         public override void VisitInteger(NumberIntegerNode node)
         {
-            valueStack.Push(LLVM.ConstInt(LLVM.Int32Type(), 5, new LLVMBool(1)));
+            valueStack.Push(LLVM.ConstInt(LLVM.Int32Type(), (ulong)node.Value, new LLVMBool(1)));
         }
 
         public override void VisitNameReference(NameReferenceNode node)
