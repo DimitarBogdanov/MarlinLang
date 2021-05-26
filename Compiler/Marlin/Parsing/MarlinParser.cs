@@ -22,6 +22,8 @@ namespace Marlin.Parsing
         private readonly string file;
         public List<CompilerWarning> warnings = new();
         private static long totalParseTime = 0;
+        private string currentClassName = "";
+        private readonly List<string> attributes = new();
 
         public static long TotalParseTime { get => totalParseTime; set => totalParseTime = value; }
 
@@ -157,12 +159,15 @@ namespace Marlin.Parsing
                 return null;
             }
 
+            string oldClassName = currentClassName;
+            currentClassName = nameToken.value;
+
             // Opening brace
             if (stream.Peek().type == TokenType.BRACE_LEFT)
             {
                 stream.Next(); // consume '{'
 
-                ClassTemplateNode templateNode = new(nameToken.value, nameToken);
+                ClassTemplateNode templateNode = new(nameToken.value, attributes.ToArray(), nameToken);
 
                 while (stream.Peek().type != TokenType.BRACE_RIGHT && stream.Peek().type != TokenType.EOF)
                 {
@@ -184,6 +189,9 @@ namespace Marlin.Parsing
                     stream.Next();
                 }
 
+                currentClassName = oldClassName;
+                attributes.Clear();
+
                 return templateNode;
             } else
             {
@@ -195,16 +203,25 @@ namespace Marlin.Parsing
                     file: file,
                     rootCause: stream.Peek()
                 ));
+                currentClassName = oldClassName;
+                attributes.Clear();
                 return null;
             }
         }
 
         private Node ExpectClassMember()
         {
+            while (stream.Peek().type == TokenType.ATTRIBUTE) LoadAttribute();
+
             Token token = stream.Peek();
+
             if (token.type == TokenType.FUNCTION)
             {
                 return ExpectFunction();
+            }
+            else if (token.type == TokenType.CONSTRUCTOR)
+            {
+                return ExpectConstructor();
             }
             else
             {
@@ -235,6 +252,7 @@ namespace Marlin.Parsing
                     file: file,
                     rootCause: typeToken
                 ));
+                attributes.Clear();
                 return null;
             }
 
@@ -269,6 +287,7 @@ namespace Marlin.Parsing
                     file: file,
                     rootCause: nameToken
                 ));
+                attributes.Clear();
                 return null;
             }
 
@@ -291,6 +310,7 @@ namespace Marlin.Parsing
                             file: file,
                             rootCause: stream.Peek()
                         ));
+                        attributes.Clear();
                         return null;
                     }
 
@@ -402,7 +422,7 @@ namespace Marlin.Parsing
             {
                 stream.Next(); // consume '{'
 
-                FuncNode funcNode = new(nameToken.value, typeToken.value, args, nameToken);
+                FuncNode funcNode = new(nameToken.value, typeToken.value, attributes.ToArray(), args, nameToken);
 
                 while (stream.Peek().type != TokenType.BRACE_RIGHT && stream.Peek().type != TokenType.EOF)
                 {
@@ -425,6 +445,8 @@ namespace Marlin.Parsing
                     stream.Next();
                 }
 
+                attributes.Clear();
+
                 return funcNode;
             }
             else
@@ -437,6 +459,300 @@ namespace Marlin.Parsing
                     file: file,
                     rootCause: stream.Peek()
                 ));
+                attributes.Clear();
+                return null;
+            }
+        }
+
+        private Node ExpectNewClassInst()
+        {
+            stream.Next(); // consume 'new')
+            Token identifier = stream.Next();
+
+            // Collect arguments
+            List<Node> args = new();
+            // Opening paren
+            stream.Next(); // consume '('
+            bool closedArgs = false;
+            while (stream.Peek().type != TokenType.PAREN_RIGHT)
+            {
+                if (stream.Peek().type == TokenType.EOF)
+                {
+                    warnings.Add(new(
+                        level: Level.ERROR,
+                        source: Source.PARSER,
+                        code: ErrorCode.UNEXPECTED_EOF,
+                        message: "unexpected EOF - unfinished argument list",
+                        file: file,
+                        rootCause: stream.Peek()
+                    ));
+                    return null;
+                }
+
+                args.Add(ExpectExpression());
+
+                if (stream.Peek().type == TokenType.COMMA)
+                {
+                    if (stream.Peek(2).type == TokenType.PAREN_RIGHT)
+                    {
+                        warnings.Add(new(
+                            level: Level.ERROR,
+                            source: Source.PARSER,
+                            code: ErrorCode.CANNOT_HAVE_PAREN_AFTER_COMMA_ARGLIST,
+                            message: "cannot have ')' after comma in argument list",
+                            file: file,
+                            rootCause: stream.Peek()
+                        ));
+                    }
+                    stream.Next();
+                }
+                else if (stream.Peek().type == TokenType.PAREN_RIGHT)
+                {
+                    closedArgs = true;
+                    stream.Next();
+                    break;
+                }
+                else
+                {
+                    warnings.Add(new(
+                        level: Level.ERROR,
+                        source: Source.PARSER,
+                        code: ErrorCode.EXPECTED_COMMA_ARGLIST,
+                        message: "expected comma",
+                        file: file,
+                        rootCause: stream.Peek()
+                    ));
+                }
+            }
+
+            if (!closedArgs)
+            {
+                if (stream.Peek().type == TokenType.PAREN_RIGHT)
+                {
+                    stream.Next();
+                }
+                else
+                {
+                    warnings.Add(new(
+                        level: Level.ERROR,
+                        source: Source.PARSER,
+                        code: ErrorCode.EXPECTED_PAREN_CLOSE_ARGLIST,
+                        message: "expected ')' to close arguments list, got " + stream.Peek().type,
+                        file: file,
+                        rootCause: stream.Peek()
+                    ));
+                }
+            }
+
+            return new NewClassInstNode(identifier.value, args, identifier);
+        }
+
+        private Node ExpectConstructor()
+        {
+            Token ctorToken = stream.Next(); // consume 'constructor'
+
+            List<KeyValuePair<NameReferenceNode, NameReferenceNode>> args = new();
+
+            if (attributes.Contains("static"))
+            {
+                // No arguments
+                if (stream.Peek().type == TokenType.PAREN_LEFT)
+                {
+                    warnings.Add(new(
+                        level: Level.ERROR,
+                        source: Source.PARSER,
+                        code: ErrorCode.UNEXPECTED_ARGS_STATIC_CTOR,
+                        message: "unexpected arguments in static constructor",
+                        file: file,
+                        rootCause: stream.Peek()
+                    ));
+
+                    do { stream.Next(); } while (stream.Peek().type != TokenType.BRACE_LEFT || stream.Peek().type == TokenType.EOF);
+
+                    if (stream.Peek().type == TokenType.EOF)
+                    {
+                        warnings.Add(new(
+                            level: Level.ERROR,
+                            source: Source.PARSER,
+                            code: ErrorCode.UNEXPECTED_EOF,
+                            message: "unexpected EOF - unfinished constructor",
+                            file: file,
+                            rootCause: stream.Peek()
+                        ));
+                    }
+                }
+            }
+            else
+            {
+                // Collect arguments
+                // Opening paren
+                if (stream.Peek().type == TokenType.PAREN_LEFT)
+                {
+                    stream.Next(); // consume '('
+                    bool closedArgs = false;
+                    while (stream.Peek().type != TokenType.PAREN_RIGHT)
+                    {
+                        if (stream.Peek().type == TokenType.EOF)
+                        {
+                            warnings.Add(new(
+                                level: Level.ERROR,
+                                source: Source.PARSER,
+                                code: ErrorCode.UNEXPECTED_EOF,
+                                message: "unexpected EOF - unfinished argument list",
+                                file: file,
+                                rootCause: stream.Peek()
+                            ));
+                            attributes.Clear();
+                            return null;
+                        }
+
+                        Token argTypeToken = stream.Next();
+                        if (argTypeToken.type != TokenType.IDENTIFIER)
+                        {
+                            warnings.Add(new(
+                                level: Level.ERROR,
+                                source: Source.PARSER,
+                                code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
+                                message: "expected identifier for type, got " + argTypeToken.type,
+                                file: file,
+                                rootCause: argTypeToken
+                            ));
+                        }
+
+                        while (stream.Peek().type == TokenType.DOT)
+                        {
+                            stream.Next(); // consume dot
+                            Token nextToken = stream.Next();
+                            if (nextToken.type == TokenType.IDENTIFIER)
+                            {
+                                argTypeToken = new Token(TokenType.IDENTIFIER, argTypeToken.value + "." + nextToken.value, argTypeToken.line, argTypeToken.col);
+                            }
+                            else
+                            {
+                                warnings.Add(new(
+                                    level: Level.ERROR,
+                                    source: Source.PARSER,
+                                    code: ErrorCode.EXPECTED_IDENTIFIER_IN_TYPE_NAME,
+                                    message: "expected identifier in nested type name, got " + nextToken.type,
+                                    file: file,
+                                    rootCause: nextToken
+                                ));
+                            }
+                        }
+
+                        Token argNameToken = stream.Next();
+                        if (argNameToken.type != TokenType.IDENTIFIER)
+                        {
+                            warnings.Add(new(
+                                level: Level.ERROR,
+                                source: Source.PARSER,
+                                code: ErrorCode.NAME_MUST_BE_IDENTIFIER,
+                                message: "expected identifier for name, got " + argNameToken.type,
+                                file: file,
+                                rootCause: argNameToken
+                            ));
+                        }
+
+                        args.Add(new(new NameReferenceNode(argTypeToken.value, argTypeToken), new NameReferenceNode(argNameToken.value, argNameToken)));
+
+                        if (stream.Peek().type == TokenType.COMMA)
+                        {
+                            if (stream.Peek(2).type == TokenType.PAREN_RIGHT)
+                            {
+                                warnings.Add(new(
+                                    level: Level.ERROR,
+                                    source: Source.PARSER,
+                                    code: ErrorCode.CANNOT_HAVE_PAREN_AFTER_COMMA_ARGLIST,
+                                    message: "cannot have ')' after comma in argument list",
+                                    file: file,
+                                    rootCause: stream.Peek()
+                                ));
+                            }
+                            stream.Next();
+                        }
+                        else if (stream.Peek().type == TokenType.PAREN_RIGHT)
+                        {
+                            closedArgs = true;
+                            stream.Next();
+                            break;
+                        }
+                        else
+                        {
+                            warnings.Add(new(
+                                level: Level.ERROR,
+                                source: Source.PARSER,
+                                code: ErrorCode.EXPECTED_COMMA_ARGLIST,
+                                message: "expected comma",
+                                file: file,
+                                rootCause: stream.Peek()
+                            ));
+                        }
+                    }
+
+                    if (!closedArgs)
+                    {
+                        if (stream.Peek().type == TokenType.PAREN_RIGHT)
+                        {
+                            stream.Next();
+                        }
+                        else
+                        {
+                            warnings.Add(new(
+                                level: Level.ERROR,
+                                source: Source.PARSER,
+                                code: ErrorCode.EXPECTED_PAREN_CLOSE_ARGLIST,
+                                message: "expected ')' to close arguments list, got " + stream.Peek().type,
+                                file: file,
+                                rootCause: stream.Peek()
+                            ));
+                        }
+                    }
+                }
+            }
+
+            // Opening brace
+            if (stream.Peek().type == TokenType.BRACE_LEFT)
+            {
+                stream.Next(); // consume '{'
+
+                ConstructorNode ctorNode = new(attributes.Contains("static"), currentClassName, args, ctorToken);
+
+                while (stream.Peek().type != TokenType.BRACE_RIGHT && stream.Peek().type != TokenType.EOF)
+                {
+                    ctorNode.AddChild(ExpectStatement());
+                }
+
+                if (stream.Peek().type != TokenType.BRACE_RIGHT)
+                {
+                    warnings.Add(new(
+                        level: Level.ERROR,
+                        source: Source.PARSER,
+                        code: ErrorCode.EXPECTED_FUNCTION_MEMBER,
+                        message: "expected statement or '}', got " + stream.Peek().type,
+                        file: file,
+                        rootCause: stream.Peek()
+                    ));
+                }
+                else
+                {
+                    stream.Next();
+                }
+
+                attributes.Clear();
+
+                return ctorNode;
+            }
+            else
+            {
+                warnings.Add(new(
+                    level: Level.ERROR,
+                    source: Source.PARSER,
+                    code: ErrorCode.EXPECTED_SCOPE,
+                    message: "constructor must have a scope (curly brackets)",
+                    file: file,
+                    rootCause: stream.Peek()
+                ));
+                attributes.Clear();
                 return null;
             }
         }
@@ -453,6 +769,8 @@ namespace Marlin.Parsing
             {
                 case TokenType.IDENTIFIER:
                     return ExpectIdentifier(true);
+                case TokenType.ATTRIBUTE:
+                    return LoadAttribute();
                 case TokenType.BRACE_LEFT:
                     return ExpectAnonymousScope();
                 case TokenType.SEMICOLON:
@@ -472,6 +790,26 @@ namespace Marlin.Parsing
                     stream.Next();
                     return null;
             }
+        }
+
+        private Node LoadAttribute()
+        {
+            string attribute = stream.Next().value;
+
+            if (attributes.Contains(attribute))
+            {
+                warnings.Add(new(
+                    level: Level.ERROR,
+                    source: Source.PARSER,
+                    code: ErrorCode.DUPLICATE_ATTRIBUTE,
+                    message: "duplicate attribute '" + attribute + "'",
+                    file: file,
+                    rootCause: stream.Peek()
+                ));
+            }
+
+            attributes.Add(attribute);
+            return null;
         }
 
         private Node ExpectExpression()
@@ -496,6 +834,9 @@ namespace Marlin.Parsing
                     break;
                 case TokenType.PAREN_LEFT:
                     n = ExpectParenExpression();
+                    break;
+                case TokenType.NEW:
+                    n = ExpectNewClassInst();
                     break;
                 case TokenType.SEMICOLON:
                     stream.Next();
@@ -900,8 +1241,11 @@ namespace Marlin.Parsing
 
         private Node ExpectReturn()
         {
-            stream.Next(); // consume 'return'
-            return new ReturnNode(ExpectExpression(), stream.Peek());
+            Token token = stream.Next(); // consume 'return'
+            if (stream.Peek().type == TokenType.SEMICOLON)
+                return new ReturnNode(null, token);
+            else
+                return new ReturnNode(ExpectExpression(), stream.Peek());
         }
 
         private Node ExpectInteger()

@@ -478,14 +478,18 @@ namespace Marlin.Lexing
         {
             return identifier switch
             {
-                "true"       =>  TokenType.BOOLEAN,
-                "false"      =>  TokenType.BOOLEAN,
+                "true"        =>  TokenType.BOOLEAN,
+                "false"       =>  TokenType.BOOLEAN,
                 
-                "class"      =>  TokenType.CLASS,
-                "func"       =>  TokenType.FUNCTION,
-                "return"     =>  TokenType.RETURN,
+                "class"       =>  TokenType.CLASS,
+                "new"         =>  TokenType.NEW,
+                "constructor" =>  TokenType.CONSTRUCTOR,
+                "func"        =>  TokenType.FUNCTION,
+                "return"      =>  TokenType.RETURN,
 
-                _            =>  TokenType.IDENTIFIER,
+                "static"      =>  TokenType.ATTRIBUTE,
+
+                _             =>  TokenType.IDENTIFIER,
             };
         }
     }

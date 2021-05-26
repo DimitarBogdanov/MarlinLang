@@ -21,6 +21,8 @@ namespace Marlin.Parsing
         FUNCTION,
         FUNCTION_CALL,
         CLASS_TEMPLATE,
+        CLASS_CONSTRUCTOR,
+        NEW_CLASS_INSTANCE,
         VARIABLE_ASSIGNMENT,
         VARIABLE_DECLARATION,
         RETURN_STATEMENT,
@@ -108,13 +110,15 @@ namespace Marlin.Parsing
     public class ClassTemplateNode : Node
     {
         public string Name { get; set; }
+        public string[] Attributes { get; }
 
-        public ClassTemplateNode(string name, Token token) : base(token)
+        public ClassTemplateNode(string name, string[] attributes, Token token) : base(token)
         {
             Name = name;
 
             StringType = name;
             Type = NodeType.CLASS_TEMPLATE;
+            Attributes = attributes;
         }
 
         public override string ToString()
@@ -131,14 +135,16 @@ namespace Marlin.Parsing
     public class FuncNode : Node
     {
         public string Name { get; set; }
-        public string FuncType { get; private set; }
+        public string FuncType { get; set; }
+        public string[] Attributes { get; }
         public List<KeyValuePair<NameReferenceNode, NameReferenceNode>> Args { get; private set; }
 
-        public FuncNode(string name, string type, List<KeyValuePair<NameReferenceNode, NameReferenceNode>> args, Token token) : base(token)
+        public FuncNode(string name, string type, string[] attributes, List<KeyValuePair<NameReferenceNode, NameReferenceNode>> args, Token token) : base(token)
         {
             Name = name;
             FuncType = type;
             Args = args;
+            Attributes = attributes;
 
             StringType = "func";
             Type = NodeType.FUNCTION;
@@ -152,6 +158,31 @@ namespace Marlin.Parsing
         public override void Accept(IVisitor visitor)
         {
             visitor.VisitFunc(this);
+        }
+    }
+
+    public class ConstructorNode : Node
+    {
+        public bool IsStatic { get; set; }
+        public List<KeyValuePair<NameReferenceNode, NameReferenceNode>> Args { get; private set; }
+
+        public ConstructorNode(bool isStatic, string className, List<KeyValuePair<NameReferenceNode, NameReferenceNode>> args, Token token) : base(token)
+        {
+            IsStatic = isStatic;
+            Args = args;
+
+            StringType = className;
+            Type = NodeType.CLASS_CONSTRUCTOR;
+        }
+
+        public override string ToString()
+        {
+            return "CTOR<>\n" + Args.Count + " arg(s)";
+        }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitConstructor(this);
         }
     }
 
@@ -178,6 +209,32 @@ namespace Marlin.Parsing
         public override void Accept(IVisitor visitor)
         {
             visitor.VisitFuncCall(this);
+        }
+    }
+
+    public class NewClassInstNode : Node
+    {
+        public string Name { get; set; }
+        public List<Node> Args { get; private set; }
+
+        public NewClassInstNode(string name, List<Node> args, Token token) : base(token)
+        {
+            Name = name;
+            Args = args;
+            Children = args;
+
+            StringType = name;
+            Type = NodeType.NEW_CLASS_INSTANCE;
+        }
+
+        public override string ToString()
+        {
+            return "Inst<" + Name + ">\n" + Children.Count + " arg(s)";
+        }
+
+        public override void Accept(IVisitor visitor)
+        {
+            visitor.VisitNewClassInst(this);
         }
     }
 
@@ -267,7 +324,7 @@ namespace Marlin.Parsing
             Value = value;
             Children.Add(value);
 
-            StringType = value.StringType;
+            StringType = (value != null) ? value.StringType : "void";
             Type = NodeType.RETURN_STATEMENT;
         }
 

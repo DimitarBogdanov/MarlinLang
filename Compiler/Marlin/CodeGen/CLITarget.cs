@@ -9,5 +9,10 @@ namespace Marlin.CodeGen
         {
             throw new NotImplementedException("The CLI target is not yet implemented. Please use LLVM for the time being.");
         }
+
+        public override void Dump(string path)
+        {
+            throw new NotImplementedException("The CLI target is not yet implemented. Please use LLVM for the time being.");
+        }
     }
 }

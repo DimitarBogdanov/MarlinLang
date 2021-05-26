@@ -8,6 +8,8 @@ namespace Marlin.CodeGen
 
         public abstract void BeginTranslation(Node ast);
 
+        public abstract void Dump(string path);
+
         public virtual void Visit(Node node)
         {
             throw new System.NotImplementedException();
@@ -29,6 +31,16 @@ namespace Marlin.CodeGen
         }
 
         public virtual void VisitClassTemplate(ClassTemplateNode node)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public virtual void VisitConstructor(ConstructorNode node)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public virtual void VisitNewClassInst(NewClassInstNode node)
         {
             throw new System.NotImplementedException();
         }

@@ -21,6 +21,7 @@ namespace Marlin.SemanticAnalysis
         private readonly MarlinSemanticAnalyser analyser;
 
         private string currentSymbolPath = "__global__";
+        private static byte constructorAmount = 0;
 
         public PassOneVisitor(SymbolTable symbolTable, MarlinSemanticAnalyser analyser)
         {
@@ -56,6 +57,9 @@ namespace Marlin.SemanticAnalysis
                 case NodeType.NAME_REFERENCE:
                     VisitNameReference((NameReferenceNode)node);
                     break;
+                case NodeType.NEW_CLASS_INSTANCE:
+                    VisitNewClassInst((NewClassInstNode)node);
+                    break;
                 case NodeType.NUMBER_INT:
                     VisitInteger((NumberIntegerNode)node);
                     break;
@@ -70,6 +74,9 @@ namespace Marlin.SemanticAnalysis
                     break;
                 case NodeType.RETURN_STATEMENT:
                     VisitReturn((ReturnNode)node);
+                    break;
+                case NodeType.CLASS_CONSTRUCTOR:
+                    VisitConstructor((ConstructorNode)node);
                     break;
                 default:
                     throw new NotImplementedException(node.Type.ToString());
@@ -98,6 +105,8 @@ namespace Marlin.SemanticAnalysis
         {
             string currentScope = currentSymbolPath;
             currentSymbolPath += "." + node.Name;
+            byte oldConstructorAmount = constructorAmount;
+            constructorAmount = 0;
             
             symbolTable.AddSymbol(currentSymbolPath, new()
             {
@@ -111,10 +120,12 @@ namespace Marlin.SemanticAnalysis
             VisitBlock(node);
             currentSymbolPath = currentScope;
 
+            constructorAmount = oldConstructorAmount;
+
             return;
         }
 
-        public void VisitFunc(FuncNode node)
+        public void VisitFunc(FuncNode node) 
         {
             string currentScope = currentSymbolPath;
             currentSymbolPath += "." + node.Name;
@@ -155,6 +166,52 @@ namespace Marlin.SemanticAnalysis
             return;
         }
 
+        public void VisitConstructor(ConstructorNode node)
+        {
+            string currentScope = currentSymbolPath;
+            currentSymbolPath += ".constructor" + constructorAmount;
+
+            Dictionary<NameReferenceNode, NameReferenceNode> args = new();
+
+            // Args
+            if (!node.IsStatic)
+            {
+                foreach (var arg in node.Args)
+                {
+                    args.Add(arg.Key, arg.Value);
+                    symbolTable.AddSymbol(currentSymbolPath + "." + arg.Value.Name, new()
+                    {
+                        fullName = currentSymbolPath + "." + arg.Value.Name,
+                        name = arg.Value.Name,
+                        nationality = SymbolNationality.VARIABLE,
+                        type = arg.Key.Name,
+                        data = new()
+                    }, node, analyser);
+                    arg.Key.Name = currentSymbolPath + "." + arg.Value.Name;
+                }
+            }
+
+            symbolTable.AddSymbol(currentSymbolPath, new()
+            {
+                fullName = currentSymbolPath,
+                name = "constructor",
+                nationality = SymbolNationality.FUNC,
+                type = node.StringType,
+                data = new Dictionary<string, object>()
+                {
+                    ["args"] = args
+                }
+            }, node, analyser);
+
+            // Function members
+            VisitBlock(node);
+            currentSymbolPath = currentScope;
+
+            constructorAmount++;
+
+            return;
+        }
+
         public void VisitVarDeclare(VarDeclareNode node)
         {
             symbolTable.AddSymbol(currentSymbolPath + "." + node.Name, new()
@@ -171,6 +228,11 @@ namespace Marlin.SemanticAnalysis
 
         #region Empty (no pass 1 importance)
         public void VisitFuncCall(FuncCallNode node)
+        {
+            return; // No need for pass 1
+        }
+
+        public void VisitNewClassInst(NewClassInstNode node)
         {
             return; // No need for pass 1
         }

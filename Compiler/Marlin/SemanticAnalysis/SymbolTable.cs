@@ -20,7 +20,7 @@ namespace Marlin.SemanticAnalysis
     public class SymbolTable
     {
         private readonly string file;
-        public static readonly Dictionary<string, SymbolData> symbols = new();
+        public static Dictionary<string, SymbolData> symbols = new();
         
         public SymbolTable(string file)
         {
@@ -54,6 +54,15 @@ namespace Marlin.SemanticAnalysis
                 data = new()
             });
 
+            symbols.Add("long", new()
+            {
+                fullName = "long",
+                name = "long",
+                nationality = SymbolNationality.TYPE_REF,
+                type = "marlin::Long",
+                data = new()
+            });
+
             symbols.Add("boolean", new()
             {
                 fullName = "boolean",
@@ -76,7 +85,7 @@ namespace Marlin.SemanticAnalysis
                 data = new()
             });
             
-            symbols.Add("marlin.String", new()
+            symbols.Add("marlin::String", new()
             {
                 fullName = "marlin::String",
                 name = "String",
@@ -94,6 +103,15 @@ namespace Marlin.SemanticAnalysis
                 data = new()
             });
 
+            symbols.Add("marlin::Long", new()
+            {
+                fullName = "marlin::Long",
+                name = "Long",
+                nationality = SymbolNationality.CLASS,
+                type = "marlin::Long",
+                data = new()
+            });
+
             symbols.Add("marlin::Boolean", new()
             {
                 fullName = "marlin::Boolean",
@@ -104,6 +122,55 @@ namespace Marlin.SemanticAnalysis
             });
 
             #endregion
+        }
+
+        // Converts __global__.TestClass.main to main
+        public static void Flatten()
+        {
+            Dictionary<string, SymbolData> newSymbols = new();
+
+            foreach (var data in symbols)
+            {
+                SymbolData symbol = data.Value;
+
+                if (symbol == null)
+                {
+                    newSymbols.Add(data.Key, null);
+                    continue;
+                }
+
+                
+                string newFullName = symbol.fullName;
+                string newName = symbol.name;
+
+                if (newFullName.StartsWith("__global__"))
+                {
+                    newFullName = newFullName[11..];
+                }
+                if (newName.StartsWith("__global__"))
+                {
+                    newName = newName[11..];
+                }
+                
+                if (symbol.nationality != SymbolNationality.CLASS)
+                {
+                    int lastIndexOf = newFullName.LastIndexOf('.');
+                    if (lastIndexOf != -1)
+                        newFullName = newFullName[(lastIndexOf + 1)..];
+
+                    lastIndexOf = newName.LastIndexOf('.');
+                    if (lastIndexOf != -1)
+                        newName = newName[(lastIndexOf+1)..];
+                }
+
+                symbol.fullName = newFullName;
+                symbol.name = newName;
+
+
+                newSymbols.Add(data.Key, symbol);
+            }
+
+            symbols = newSymbols;
         }
 
         public bool AddSymbol(string id, SymbolData data, Node nodeReference, MarlinSemanticAnalyser analyser)

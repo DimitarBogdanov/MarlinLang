@@ -49,13 +49,16 @@ namespace Marlin.CodeGen
                 node.Accept(this);
             }
 
-            string path = Program.SOURCE_DIR + "\\out\\dump.ll";
+            TotalCodeGenTime += Utils.CurrentTimeMillis() - start;
+        }
+
+        public override void Dump(string path)
+        {
+            path += "dump.ll";
             File.Create(path).Close();
             LLVM.PrintModuleToFile(module, path, out string err);
             if (err != "")
                 Console.WriteLine(err);
-
-            TotalCodeGenTime += Utils.CurrentTimeMillis() - start;
         }
 
         #region Visitor
@@ -110,6 +113,16 @@ namespace Marlin.CodeGen
             return;
         }
 
+        public override void VisitNewClassInst(NewClassInstNode node)
+        {
+            return; // TODO
+        }
+
+        public override void VisitConstructor(ConstructorNode node)
+        {
+            return; // TODO
+        }
+
         public override void VisitDouble(NumberDoubleNode node)
         {
             valueStack.Push(LLVM.ConstReal(LLVM.DoubleType(), node.Value));
@@ -120,43 +133,58 @@ namespace Marlin.CodeGen
             string currentScope = currentSymbolPath;
             currentSymbolPath = node.Name;
 
+            string funcType = node.FuncType;
             var argsCount = (uint)node.Args.Count;
             var arguments = new LLVMTypeRef[argsCount];
 
-            var function = LLVM.GetNamedFunction(module, currentSymbolPath);
+            scopes.Add(new());
+            LLVMTypeRef typeRef;
 
-            if (function.Pointer != IntPtr.Zero)
+            for (int i = 0; i < argsCount; i++)
             {
-                // If F already has a body, reject this.
-                if (LLVM.CountBasicBlocks(function) != 0)
+                // TODO: Marlin supports more types than just Int32s, lol
+                arguments[i] = LLVM.Int32Type();
+                var argData = node.Args[i];
+                string type = argData.Value.Name;
+                string name = argData.Value.Name;
+                int lio = name.LastIndexOf('.');
+                if (lio != -1)
+                    name = name.Substring(lio + 1, name.Length - lio - 1);
+                typeRef = new();
+
+                if (type == "marlin.Int")
                 {
-                    throw new Exception("redefinition of function.");
+                    typeRef = LLVM.Int32Type();
+                }
+                else if (type == "marlin.Long")
+                {
+                    typeRef = LLVM.Int64Type();
+                }
+                else if (type == "marlin.Double")
+                {
+                    typeRef = LLVM.DoubleType();
                 }
 
-                // If F took a different number of args, reject.
-                if (LLVM.CountParams(function) != argsCount)
-                {
-                    throw new Exception("redefinition of function with different # args");
-                }
+                scopes[i].Add(name, LLVM.ConstNull(typeRef));
             }
-            else
+
+            typeRef = new();
+
+            if (funcType == "marlin.Int")
             {
-                scopes.Add(new());
-
-                for (int i = 0; i < argsCount; i++)
-                {
-                    // TODO: Marlin supports more types than just Int32s, lol
-                    arguments[i] = LLVM.Int32Type();
-                    string name = node.Args[i].Key.Name;
-                    int lio = name.LastIndexOf('.');
-                    if (lio != -1)
-                        name = name.Substring(lio + 1, name.Length - lio - 1);
-                    scopes[i].Add(name, LLVM.ConstNull(LLVM.Int32Type()));
-                }
-
-                function = LLVM.AddFunction(module, node.Name, LLVM.FunctionType(LLVM.Int32Type(), arguments, new LLVMBool(0)));
-                LLVM.SetLinkage(function, LLVMLinkage.LLVMExternalLinkage);
+                typeRef = LLVM.Int32Type();
             }
+            else if (funcType == "marlin.Long")
+            {
+                typeRef = LLVM.Int64Type();
+            }
+            else if (funcType == "marlin.Double")
+            {
+                typeRef = LLVM.DoubleType();
+            }
+
+            var function = LLVM.AddFunction(module, node.Name, LLVM.FunctionType(LLVM.Int32Type(), arguments, new LLVMBool(0)));
+            LLVM.SetLinkage(function, LLVMLinkage.LLVMExternalLinkage);
 
             LLVM.PositionBuilderAtEnd(builder, LLVM.AppendBasicBlock(function, "entry"));
 

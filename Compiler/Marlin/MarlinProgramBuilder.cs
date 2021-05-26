@@ -119,7 +119,12 @@ namespace Marlin
             // Build status
             if (allWarnings.Count != 0)
                 Console.WriteLine();
-            Console.WriteLine($"Build completed in {((endTime - startTime) / 1000.0).ToString().Replace(',', '.')} sec: " + (BuildFailed ? "FAILED" : "SUCCESSFUL"));
+
+            Console.Write($"Build completed in {((endTime - startTime) / 1000.0).ToString().Replace(',', '.')} sec: ");
+            Console.ForegroundColor = (BuildFailed ? ConsoleColor.Red : ConsoleColor.Green);
+            Console.WriteLine(BuildFailed ? "FAILED" : "SUCCESSFUL");
+            Console.ForegroundColor = previousColor;
+
             if (Program.DEBUG_MODE)
             {
                 Console.WriteLine("   Of which...");
@@ -274,9 +279,11 @@ namespace Marlin
             // Stop! Clogging! Up! Ram!
             fileList = null;
         }
+
         private static void CodeGen()
         {
             //SymbolTable.Dump();
+            SymbolTable.Flatten();
 
             foreach (var status in fileStatuses)
             {
@@ -293,12 +300,15 @@ namespace Marlin
                 target = new LLVMSharpTarget(Program.MODULE_NAME);
             else if (Program.TARGET == "CLI")
                 target = new CLITarget();
+            else if (Program.TARGET == "TEST")
+                target = new TestTarget();
             else
                 throw new Exception("Invalid target");
 
             try
             {
                 target.BeginTranslation(rootNode);
+                target.Dump(Program.SOURCE_DIR + "\\out\\");
             }
             catch (Exception ex)
             {

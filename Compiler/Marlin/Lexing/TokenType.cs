@@ -52,7 +52,10 @@ namespace Marlin.Lexing
         OR,             // ||
 
         CLASS,          // class
-        FUNCTION,       // function
+        FUNCTION,       // func
+        CONSTRUCTOR,    // constructor
+        ATTRIBUTE,      // static
+        NEW,            // new
         RETURN,         // return
     }
 }

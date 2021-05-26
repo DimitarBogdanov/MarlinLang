@@ -1,0 +1,14 @@
+; This is a custom IL used solely for testing the compiler.
+moduledef      HelloWorld
+classdef       Test
+{
+   funcdef        main
+   .functype      marlin::Int
+   .attribute     static
+   {
+      loadint        12
+      ret
+   } ; End of function main
+
+} ; End of class Test
+

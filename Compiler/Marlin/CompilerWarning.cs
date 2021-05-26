@@ -55,6 +55,8 @@ namespace Marlin
             public const string VOID_MISUSE = "MAR0025";
             public const string FUNC_RETURN_TYPE_MISMATCH = "MAR0026";
             public const string VARASSIGN_TYPE_MISMATCH = "MAR0027";
+            public const string UNEXPECTED_ARGS_STATIC_CTOR = "MAR0028";
+            public const string DUPLICATE_ATTRIBUTE = "MAR0029";
         }
 
         public Level WarningLevel { get; private set; }

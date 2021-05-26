@@ -65,7 +65,7 @@ namespace Marlin
             MODULE_NAME = options.GetOption("--moduleName");
             TARGET = options.HasOption("--target", true) ? options.GetOption("--target").ToUpper() : "LLVM";
 
-            if (TARGET != "CLI" && TARGET != "LLVM")
+            if (TARGET != "CLI" && TARGET != "LLVM" && TARGET != "TEST")
             {
                 Console.WriteLine("Invalid target! Run \"marlin --help\" for instructions.");
                 Environment.Exit(0);

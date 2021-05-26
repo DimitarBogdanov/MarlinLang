@@ -19,6 +19,8 @@ namespace Marlin.Parsing
         public void VisitBinaryOperator(BinaryOperatorNode node);
         public void VisitFunc(FuncNode node);
         public void VisitFuncCall(FuncCallNode node);
+        public void VisitNewClassInst(NewClassInstNode node);
+        public void VisitConstructor(ConstructorNode node);
         public void VisitClassTemplate(ClassTemplateNode node);
         public void VisitNameReference(NameReferenceNode node);
         public void VisitVarAssign(VarAssignNode node);

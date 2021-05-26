@@ -24,6 +24,7 @@ namespace Marlin.SemanticAnalysis
         private readonly string file = "";
         
         private string currentSymbolPath = "__global__";
+        private static byte constructorAmount = 0;
         private SymbolData currentFunctionSymbolData = null;
 
         public PassTwoVisitor(SymbolTable symbolTable, MarlinSemanticAnalyser analyser, string file)
@@ -49,7 +50,15 @@ namespace Marlin.SemanticAnalysis
                         }
                         else
                         {
-                            throw new Exception("Asked to get type of node whose symbol doesn't exist");
+                            analyser.AddWarning(new(
+                                level: Level.ERROR,
+                                source: Source.SEMANTIC_ANALYSIS,
+                                code: ErrorCode.UNKNOWN_SYMBOL,
+                                message: "unknown symbol '" + ((FuncCallNode)node).Name + "'",
+                                file: file,
+                                rootCause: node.Token
+                            ));
+                            return "?";
                         }
                     }
 
@@ -65,6 +74,7 @@ namespace Marlin.SemanticAnalysis
                             throw new Exception("Asked to get type of node whose symbol doesn't exist");
                         }
                     }
+
                 case NodeType.NAME_REFERENCE:
                     {
                         SymbolData data = SymbolTable.GetSymbol(((NameReferenceNode)node).Name, currentSymbolPath);
@@ -85,6 +95,28 @@ namespace Marlin.SemanticAnalysis
                             return "?";
                         }
                     }
+
+                case NodeType.NEW_CLASS_INSTANCE:
+                    {
+                        SymbolData data = SymbolTable.GetSymbol(((NewClassInstNode)node).Name, currentSymbolPath);
+                        if (data != null)
+                        {
+                            return data.type;
+                        }
+                        else
+                        {
+                            analyser.AddWarning(new(
+                                level: Level.ERROR,
+                                source: Source.SEMANTIC_ANALYSIS,
+                                code: ErrorCode.UNKNOWN_SYMBOL,
+                                message: "unknown symbol '" + ((NameReferenceNode)node).Name + "'",
+                                file: file,
+                                rootCause: node.Token
+                            ));
+                            return "?";
+                        }
+                    }
+
                 case NodeType.NUMBER_INT:
                     return "marlin::Int";
                 case NodeType.NUMBER_DBL:
@@ -124,6 +156,9 @@ namespace Marlin.SemanticAnalysis
                 case NodeType.VARIABLE_DECLARATION:
                     VisitVarDeclare((VarDeclareNode)node);
                     break;
+                case NodeType.NEW_CLASS_INSTANCE:
+                    VisitNewClassInst((NewClassInstNode)node);
+                    break;
                 case NodeType.NAME_REFERENCE:
                     VisitNameReference((NameReferenceNode)node);
                     break;
@@ -142,10 +177,14 @@ namespace Marlin.SemanticAnalysis
                 case NodeType.RETURN_STATEMENT:
                     VisitReturn((ReturnNode)node);
                     break;
+                case NodeType.CLASS_CONSTRUCTOR:
+                    VisitConstructor((ConstructorNode)node);
+                    break;
                 default:
                     throw new NotImplementedException(node.Type.ToString());
             }
         }
+
         public void VisitBlock(Node node)
         {
             foreach (Node child in node.Children)
@@ -169,8 +208,25 @@ namespace Marlin.SemanticAnalysis
         {
             string currentScope = currentSymbolPath;
             currentSymbolPath += "." + node.Name;
+            byte oldConstructorAmount = constructorAmount;
+            constructorAmount = 0;
+
+            node.Name = currentSymbolPath;
+
             VisitBlock(node);
+
+            SymbolData data = SymbolTable.GetSymbol(currentSymbolPath);
+            symbolTable.UpdateSymbol(currentSymbolPath, new()
+            {
+                fullName = currentSymbolPath,
+                name = currentSymbolPath,
+                nationality = data.nationality,
+                type = data.type,
+                data = data.data
+            }, node, analyser);
+
             currentSymbolPath = currentScope;
+            constructorAmount = oldConstructorAmount;
 
             return;
         }
@@ -192,8 +248,18 @@ namespace Marlin.SemanticAnalysis
             SymbolData typeData = SymbolTable.GetSymbol(data.type, currentSymbolPath);
             if (typeData == null)
             {
+                analyser.AddWarning(new(
+                    level: Level.ERROR,
+                    source: Source.SEMANTIC_ANALYSIS,
+                    code: ErrorCode.UNKNOWN_SYMBOL,
+                    message: "unknown type " + data.type,
+                    file: file,
+                    rootCause: node.Token
+                ));
                 return;
             }
+
+            node.FuncType = typeData.fullName;
 
             // Update regular data
             symbolTable.UpdateSymbol(path, new()
@@ -227,7 +293,17 @@ namespace Marlin.SemanticAnalysis
 
             SymbolData typeData = SymbolTable.GetSymbol(data.type);
             if (typeData == null)
+            {
+                analyser.AddWarning(new(
+                    level: Level.ERROR,
+                    source: Source.SEMANTIC_ANALYSIS,
+                    code: ErrorCode.UNKNOWN_SYMBOL,
+                    message: "unknown type " + data.type,
+                    file: file,
+                    rootCause: node.Token
+                ));
                 return;
+            }
 
             // Update regular data
             symbolTable.UpdateSymbol(path, new()
@@ -370,9 +446,14 @@ namespace Marlin.SemanticAnalysis
             return;
         }
 
+        public void VisitNewClassInst(NewClassInstNode node)
+        {
+            throw new NotImplementedException();
+        }
+
         public void VisitReturn(ReturnNode node)
         {
-            string valueType = GetNodeType(node.Value);
+            string valueType = node.Value != null ? GetNodeType(node.Value) : "void";
             SymbolData smb = SymbolTable.GetSymbol(valueType, currentSymbolPath);
 
             if (smb == null)
@@ -451,6 +532,46 @@ namespace Marlin.SemanticAnalysis
         public void VisitString(StringNode node)
         {
             return; // No need for pass 2
+        }
+
+        public void VisitConstructor(ConstructorNode node)
+        {
+            SymbolData typeData = SymbolTable.GetSymbol(currentSymbolPath);
+            if (typeData == null)
+            {
+                return;
+            }
+
+            string currentScope = currentSymbolPath;
+            currentSymbolPath += ".constructor" + constructorAmount;
+
+            string path = currentSymbolPath;
+            SymbolData data = SymbolTable.GetSymbol(path, currentSymbolPath);
+            if (data == null)
+            {
+                return;
+            }
+
+            // Update regular data
+            symbolTable.UpdateSymbol(path, new()
+            {
+                fullName = data.fullName,
+                name = data.name,
+                nationality = data.nationality,
+                type = typeData.fullName,
+                data = data.data
+            }, node, analyser);
+
+            SymbolData oldFuncSD = currentFunctionSymbolData;
+            currentFunctionSymbolData = SymbolTable.GetSymbol(path, currentSymbolPath);
+
+            VisitBlock(node);
+
+            currentFunctionSymbolData = oldFuncSD;
+
+            currentSymbolPath = currentScope;
+
+            return;
         }
     }
 }
