@@ -1,5 +1,0 @@
-class Test {
-	static func int main() {
-		return 12;
-	}
-}
